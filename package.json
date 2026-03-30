@@ -1,0 +1,53 @@
+{
+  "name": "cronai",
+  "version": "0.1.0",
+  "description": "AI coding agent task scheduler with launchd integration",
+  "type": "module",
+  "bin": {
+    "cronai": "./dist/bin/cronai.js"
+  },
+  "scripts": {
+    "dev": "tsx bin/cronai.ts",
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "cron",
+    "scheduler",
+    "launchd",
+    "claude",
+    "cli",
+    "tui"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "chalk": "^5.4.0",
+    "cron-parser": "^5.0.0",
+    "cronstrue": "^2.52.0",
+    "date-fns": "^4.1.0",
+    "ink": "^5.1.0",
+    "ink-select-input": "^6.0.0",
+    "ink-spinner": "^5.0.0",
+    "ink-text-input": "^6.0.0",
+    "nanoid": "^5.1.0",
+    "react": "^18.3.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "tsup": "^8.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}
