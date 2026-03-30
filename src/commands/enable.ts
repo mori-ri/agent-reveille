@@ -4,7 +4,7 @@ import { installPlist } from "../lib/scheduler.js";
 export default async function enable(args: string[]) {
   const id = args[0];
   if (!id) {
-    console.error("Usage: cronai enable <task-id>");
+    console.error("Usage: reveille enable <task-id>");
     process.exit(1);
   }
 

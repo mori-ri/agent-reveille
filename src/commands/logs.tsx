@@ -16,7 +16,7 @@ function ExecutionList({ executions, taskName }: { executions: Execution[]; task
   return (
     <Box flexDirection="column" paddingX={1}>
       <Text bold color="cyan">
-        cronai - Execution Logs{taskName ? ` (${taskName})` : ""}
+        reveille - Execution Logs{taskName ? ` (${taskName})` : ""}
       </Text>
       <Text> </Text>
       {executions.map((exec) => {
@@ -55,6 +55,7 @@ function ExecutionList({ executions, taskName }: { executions: Execution[]; task
 export default async function logs(args: string[]) {
   const id = args[0];
 
+  let instance;
   if (id) {
     const task = getTask(id);
     if (!task) {
@@ -62,9 +63,12 @@ export default async function logs(args: string[]) {
       process.exit(1);
     }
     const executions = getTaskExecutions(id);
-    render(<ExecutionList executions={executions} taskName={task.name} />);
+    instance = render(<ExecutionList executions={executions} taskName={task.name} />);
   } else {
     const executions = getRecentExecutions();
-    render(<ExecutionList executions={executions} />);
+    instance = render(<ExecutionList executions={executions} />);
   }
+
+  instance.unmount();
+  await instance.waitUntilExit();
 }

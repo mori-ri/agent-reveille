@@ -4,7 +4,7 @@ import { uninstallPlist } from "../lib/scheduler.js";
 export default async function remove(args: string[]) {
   const id = args[0];
   if (!id) {
-    console.error("Usage: cronai remove <task-id>");
+    console.error("Usage: reveille remove <task-id>");
     process.exit(1);
   }
 

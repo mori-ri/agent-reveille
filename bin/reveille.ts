@@ -36,7 +36,7 @@ async function main() {
       break;
     case "--version":
     case "-v":
-      console.log("cronai v0.1.0");
+      console.log("reveille v0.1.0");
       break;
     default:
       console.error(`Unknown command: ${command}`);
@@ -47,9 +47,9 @@ async function main() {
 
 function printHelp() {
   console.log(`
-  cronai - AI Agent Task Scheduler
+  reveille - AI Agent Task Scheduler
 
-  Usage: cronai <command> [options]
+  Usage: reveille <command> [options]
 
   Commands:
     add                Create a new scheduled task

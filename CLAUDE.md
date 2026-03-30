@@ -1,4 +1,4 @@
-# cronai
+# reveille
 
 AI coding agent task scheduler with launchd integration.
 
@@ -10,7 +10,7 @@ AI coding agent task scheduler with launchd integration.
 
 ## Project Structure
 
-- `bin/cronai.ts` - CLI entry point
+- `bin/reveille.ts` - CLI entry point
 - `src/commands/` - CLI subcommands (each file = one command)
 - `src/components/` - Reusable Ink TUI components
 - `src/lib/` - Core business logic (no UI)
@@ -28,7 +28,7 @@ npm test                     # Run tests
 
 ## Architecture
 
-- launchd plists call `cronai run <id>`, not the agent directly
+- launchd plists call `reveille run <id>`, not the agent directly
 - This allows automatic logging, timeout handling, and status tracking
-- Task configs and execution history stored in SQLite at ~/.config/cronai/cronai.db
-- Execution logs stored at ~/.local/share/cronai/logs/
+- Task configs and execution history stored in SQLite at ~/.config/reveille/reveille.db
+- Execution logs stored at ~/.local/share/reveille/logs/
