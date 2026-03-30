@@ -1,5 +1,7 @@
 # cronai
 
+[日本語版 README はこちら](README_ja.md)
+
 AI coding agent task scheduler for macOS. Schedule Claude Code, Codex, Gemini, and other AI agents to run automatically via launchd.
 
 ```
