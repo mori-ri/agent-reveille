@@ -96,7 +96,7 @@ function AddWizard() {
   return (
     <Box flexDirection="column" paddingX={1}>
       <Text bold color="cyan">
-        cronai - New Task
+        reveille - New Task
       </Text>
       <Text> </Text>
 
@@ -270,5 +270,6 @@ export default async function add(args: string[]) {
   }
 
   // Interactive mode
-  render(<AddWizard />);
+  const { waitUntilExit } = render(<AddWizard />);
+  await waitUntilExit();
 }

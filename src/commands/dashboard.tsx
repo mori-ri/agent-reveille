@@ -13,7 +13,7 @@ function Header() {
     <Box flexDirection="column">
       <Box>
         <Text bold color="cyan">
-          {"  "}cronai
+          {"  "}reveille
         </Text>
         <Text color="gray"> - AI Agent Task Scheduler</Text>
         <Text color="gray"> v{VERSION}</Text>
@@ -179,7 +179,7 @@ function Dashboard() {
     }
 
     if (input === "R" && selectedTask) {
-      setMessage(`Running ${selectedTask.name}... (use cronai run ${selectedTask.id} in another terminal)`);
+      setMessage(`Running ${selectedTask.name}... (use reveille run ${selectedTask.id} in another terminal)`);
     }
   });
 
@@ -191,7 +191,7 @@ function Dashboard() {
         <Box paddingX={2} marginTop={1}>
           <Text color="gray">
             No tasks. Press <Text bold color="white">a</Text> to add one, or run{" "}
-            <Text bold color="cyan">cronai add</Text>.
+            <Text bold color="cyan">reveille add</Text>.
           </Text>
         </Box>
       ) : (
@@ -246,5 +246,6 @@ function Dashboard() {
 }
 
 export default async function dashboard(_args: string[]) {
-  render(<Dashboard />);
+  const { waitUntilExit } = render(<Dashboard />);
+  await waitUntilExit();
 }

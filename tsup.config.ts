@@ -1,7 +1,7 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ["bin/cronai.ts"],
+  entry: ["bin/reveille.ts"],
   format: ["esm"],
   target: "node20",
   outDir: "dist/bin",

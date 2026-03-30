@@ -5,13 +5,13 @@ import { mkdirSync } from "node:fs";
 const home = homedir();
 
 export function getConfigDir(): string {
-  const dir = join(home, ".config", "cronai");
+  const dir = join(home, ".config", "reveille");
   mkdirSync(dir, { recursive: true });
   return dir;
 }
 
 export function getDataDir(): string {
-  const dir = join(home, ".local", "share", "cronai");
+  const dir = join(home, ".local", "share", "reveille");
   mkdirSync(dir, { recursive: true });
   return dir;
 }
@@ -36,9 +36,9 @@ export function getPlistDir(): string {
 }
 
 export function getPlistPath(taskId: string): string {
-  return join(getPlistDir(), `com.cronai.task.${taskId}.plist`);
+  return join(getPlistDir(), `com.reveille.task.${taskId}.plist`);
 }
 
 export function getBinPath(): string {
-  return process.argv[1] ?? "cronai";
+  return process.argv[1] ?? "reveille";
 }

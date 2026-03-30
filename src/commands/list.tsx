@@ -12,7 +12,7 @@ function TaskList() {
     return (
       <Box paddingX={1} flexDirection="column">
         <Text color="gray">No tasks configured. Run </Text>
-        <Text bold color="cyan">cronai add</Text>
+        <Text bold color="cyan">reveille add</Text>
         <Text color="gray"> to create one.</Text>
       </Box>
     );
@@ -21,7 +21,7 @@ function TaskList() {
   return (
     <Box flexDirection="column" paddingX={1}>
       <Text bold color="cyan">
-        cronai - Tasks
+        reveille - Tasks
       </Text>
       <Text> </Text>
       <Box>
@@ -94,5 +94,7 @@ function TaskList() {
 }
 
 export default async function list(_args: string[]) {
-  render(<TaskList />);
+  const { unmount, waitUntilExit } = render(<TaskList />);
+  unmount();
+  await waitUntilExit();
 }

@@ -1,13 +1,13 @@
 {
-  "name": "cronai",
+  "name": "reveille",
   "version": "0.1.0",
   "description": "AI coding agent task scheduler with launchd integration",
   "type": "module",
   "bin": {
-    "cronai": "./dist/bin/cronai.js"
+    "reveille": "./dist/bin/reveille.js"
   },
   "scripts": {
-    "dev": "tsx bin/cronai.ts",
+    "dev": "tsx bin/reveille.ts",
     "build": "tsup",
     "test": "vitest run",
     "test:watch": "vitest",

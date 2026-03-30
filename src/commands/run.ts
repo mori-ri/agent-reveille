@@ -5,7 +5,7 @@ import { formatDuration } from "../utils/format.js";
 export default async function run(args: string[]) {
   const id = args[0];
   if (!id) {
-    console.error("Usage: cronai run <task-id>");
+    console.error("Usage: reveille run <task-id>");
     process.exit(1);
   }
 

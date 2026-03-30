@@ -81,7 +81,7 @@ function getUserPath(): string {
 
 export function generatePlist(task: Task): string {
   const binPath = getBinPath();
-  const label = `com.cronai.task.${task.id}`;
+  const label = `com.reveille.task.${task.id}`;
 
   const plist: Record<string, unknown> = {
     Label: label,
@@ -91,8 +91,8 @@ export function generatePlist(task: Task): string {
       PATH: getUserPath(),
       HOME: process.env.HOME ?? "",
     },
-    StandardOutPath: `/tmp/cronai-${task.id}.stdout.log`,
-    StandardErrorPath: `/tmp/cronai-${task.id}.stderr.log`,
+    StandardOutPath: `/tmp/reveille-${task.id}.stdout.log`,
+    StandardErrorPath: `/tmp/reveille-${task.id}.stderr.log`,
     RunAtLoad: false,
   };
 
@@ -151,7 +151,7 @@ export function uninstallPlist(taskId: string): void {
 }
 
 export function isLoaded(taskId: string): boolean {
-  const label = `com.cronai.task.${taskId}`;
+  const label = `com.reveille.task.${taskId}`;
   try {
     execSync(`launchctl list ${label}`, { stdio: "ignore" });
     return true;
