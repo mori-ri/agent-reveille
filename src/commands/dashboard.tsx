@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { render, Box, Text, useInput, useApp } from "ink";
-import { listTasks, getTaskExecutions, getRecentExecutions } from "../lib/tasks.js";
-import { isLoaded } from "../lib/scheduler.js";
+import { listTasks, getTaskExecutions, deleteTask } from "../lib/tasks.js";
+import { isLoaded, uninstallPlist, installPlist } from "../lib/scheduler.js";
+import { updateTask, getTask } from "../lib/tasks.js";
 import { formatDuration, formatRelativeTime, formatStatus } from "../utils/format.js";
+import { readLogFile } from "../lib/executor.js";
 import cronstrue from "cronstrue";
 import type { Task, Execution } from "../lib/schema.js";
 
 const VERSION = "0.1.0";
+
+let exitAction: "quit" | "add" = "quit";
 
 function Header() {
   return (
@@ -153,12 +157,19 @@ function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>(listTasks());
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [message, setMessage] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const refreshTasks = () => {
+    const updated = listTasks();
+    setTasks(updated);
+    if (selectedIndex >= updated.length) {
+      setSelectedIndex(Math.max(0, updated.length - 1));
+    }
+  };
 
   // Refresh tasks periodically
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTasks(listTasks());
-    }, 5000);
+    const interval = setInterval(refreshTasks, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -166,8 +177,27 @@ function Dashboard() {
   const executions = selectedTask ? getTaskExecutions(selectedTask.id, 5) : [];
 
   useInput((input, key) => {
+    // Clear message on any input
+    if (message && !confirmDelete) setMessage("");
+
     if (input === "q" || (key.ctrl && input === "c")) {
+      exitAction = "quit";
       exit();
+      return;
+    }
+
+    // Confirm delete flow
+    if (confirmDelete) {
+      if (input === "y" && selectedTask) {
+        uninstallPlist(selectedTask.id);
+        deleteTask(selectedTask.id);
+        setMessage(`Removed: ${selectedTask.name}`);
+        setConfirmDelete(false);
+        refreshTasks();
+      } else {
+        setMessage("Cancelled.");
+        setConfirmDelete(false);
+      }
       return;
     }
 
@@ -178,8 +208,43 @@ function Dashboard() {
       setSelectedIndex((i) => Math.max(i - 1, 0));
     }
 
+    if (input === "a") {
+      exitAction = "add";
+      exit();
+    }
+
+    if (input === "r" && selectedTask) {
+      setConfirmDelete(true);
+      setMessage(`Remove "${selectedTask.name}"? (y/n)`);
+    }
+
+    if (input === " " && selectedTask) {
+      const loaded = isLoaded(selectedTask.id);
+      if (loaded) {
+        uninstallPlist(selectedTask.id);
+        updateTask(selectedTask.id, { enabled: false });
+        setMessage(`Disabled: ${selectedTask.name}`);
+      } else {
+        installPlist(selectedTask);
+        updateTask(selectedTask.id, { enabled: true });
+        setMessage(`Enabled: ${selectedTask.name}`);
+      }
+      refreshTasks();
+    }
+
     if (input === "R" && selectedTask) {
-      setMessage(`Running ${selectedTask.name}... (use reveille run ${selectedTask.id} in another terminal)`);
+      setMessage(`Run in another terminal: reveille run ${selectedTask.id}`);
+    }
+
+    if (input === "l" && selectedTask) {
+      const lastExec = executions[0];
+      if (lastExec?.stdoutPath) {
+        const log = readLogFile(lastExec.stdoutPath);
+        const lines = log.split("\n").slice(-10).join("\n");
+        setMessage(`--- Log (last 10 lines) ---\n${lines}`);
+      } else {
+        setMessage("No logs available.");
+      }
     }
   });
 
@@ -245,7 +310,24 @@ function Dashboard() {
   );
 }
 
+function restoreTerminal() {
+  if (process.stdin.isTTY && process.stdin.isRaw) {
+    process.stdin.setRawMode(false);
+  }
+  process.stdin.unref();
+}
+
 export default async function dashboard(_args: string[]) {
+  exitAction = "quit";
+
   const { waitUntilExit } = render(<Dashboard />);
   await waitUntilExit();
+
+  restoreTerminal();
+
+  if (exitAction === "add") {
+    await new Promise((r) => setTimeout(r, 50));
+    const addCmd = await import("./add.js");
+    await addCmd.default([]);
+  }
 }
