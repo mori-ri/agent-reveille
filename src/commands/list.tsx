@@ -97,4 +97,8 @@ export default async function list(_args: string[]) {
   const { unmount, waitUntilExit } = render(<TaskList />);
   unmount();
   await waitUntilExit();
+  if (process.stdin.isTTY && process.stdin.isRaw) {
+    process.stdin.setRawMode(false);
+  }
+  process.stdin.unref();
 }

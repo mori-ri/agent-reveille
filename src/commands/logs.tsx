@@ -71,4 +71,8 @@ export default async function logs(args: string[]) {
 
   instance.unmount();
   await instance.waitUntilExit();
+  if (process.stdin.isTTY && process.stdin.isRaw) {
+    process.stdin.setRawMode(false);
+  }
+  process.stdin.unref();
 }
