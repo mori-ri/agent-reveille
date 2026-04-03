@@ -1,5 +1,7 @@
 import { formatDistanceToNow } from "date-fns";
 import chalk from "chalk";
+import cronstrue from "cronstrue";
+import type { Task } from "../lib/schema.js";
 
 export function formatDuration(ms: number): string {
   const seconds = Math.floor(ms / 1000);
@@ -15,6 +17,20 @@ export function formatDuration(ms: number): string {
 export function formatRelativeTime(date: string | Date): string {
   const d = typeof date === "string" ? new Date(date) : date;
   return formatDistanceToNow(d, { addSuffix: true });
+}
+
+export function formatSchedule(task: Task): string {
+  if (task.scheduleType === "cron" && task.scheduleCron) {
+    try {
+      return cronstrue.toString(task.scheduleCron);
+    } catch {
+      return task.scheduleCron;
+    }
+  }
+  if (task.scheduleType === "interval" && task.scheduleIntervalSeconds) {
+    return `every ${Math.round(task.scheduleIntervalSeconds / 60)}m`;
+  }
+  return "manual";
 }
 
 export function formatStatus(status: string): string {
