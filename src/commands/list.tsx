@@ -2,8 +2,7 @@ import React from "react";
 import { render, Box, Text } from "ink";
 import { listTasks, getTaskExecutions } from "../lib/tasks.js";
 import { isLoaded } from "../lib/scheduler.js";
-import { formatRelativeTime, formatStatus } from "../utils/format.js";
-import cronstrue from "cronstrue";
+import { formatRelativeTime, formatSchedule, formatStatus } from "../utils/format.js";
 
 function TaskList() {
   const tasks = listTasks();
@@ -51,16 +50,7 @@ function TaskList() {
         const executions = getTaskExecutions(task.id, 1);
         const lastRun = executions[0];
 
-        let scheduleText = "manual";
-        if (task.scheduleType === "cron" && task.scheduleCron) {
-          try {
-            scheduleText = cronstrue.toString(task.scheduleCron);
-          } catch {
-            scheduleText = task.scheduleCron;
-          }
-        } else if (task.scheduleType === "interval" && task.scheduleIntervalSeconds) {
-          scheduleText = `every ${Math.round(task.scheduleIntervalSeconds / 60)}m`;
-        }
+        const scheduleText = formatSchedule(task);
 
         return (
           <Box key={task.id}>

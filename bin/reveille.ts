@@ -47,7 +47,9 @@ async function main() {
 
 function printHelp() {
   console.log(`
-  reveille - AI Agent Task Scheduler
+   \x1b[33m█\x1b[37;43m ● ●\x1b[0m\x1b[33m█\x1b[0m      \x1b[33m♪\x1b[0m
+   \x1b[33m████\x1b[40;37m ==<<\x1b[0m   \x1b[1mr e v e i l l e\x1b[0m
+   \x1b[33m▀▀▀▀▀▀\x1b[0m     \x1b[33m♫\x1b[0m
 
   Usage: reveille <command> [options]
 

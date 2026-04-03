@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, renameSync, existsSync } from "node:fs";
 import { getTasksFilePath, getExecutionsFilePath } from "./paths.js";
 import type { Task, Execution } from "./schema.js";
 
@@ -17,7 +17,9 @@ function readJson<T>(filePath: string, fallback: T): T {
 }
 
 function writeJson<T>(filePath: string, data: T): void {
-  writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
+  const tmpPath = filePath + ".tmp";
+  writeFileSync(tmpPath, JSON.stringify(data, null, 2), "utf-8");
+  renameSync(tmpPath, filePath);
 }
 
 export function loadTasks(): Task[] {

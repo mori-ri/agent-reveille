@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { render, Box, Text, useInput, useApp } from "ink";
-import { listTasks, getTaskExecutions, deleteTask } from "../lib/tasks.js";
+import { listTasks, getTaskExecutions, deleteTask, updateTask } from "../lib/tasks.js";
 import { isLoaded, uninstallPlist, installPlist } from "../lib/scheduler.js";
-import { updateTask, getTask } from "../lib/tasks.js";
-import { formatDuration, formatRelativeTime, formatStatus } from "../utils/format.js";
+import { formatDuration, formatRelativeTime, formatSchedule, formatStatus } from "../utils/format.js";
 import { readLogFile } from "../lib/executor.js";
-import cronstrue from "cronstrue";
+import { Banner } from "../components/Banner.js";
 import type { Task, Execution } from "../lib/schema.js";
 
 const VERSION = "0.1.0";
@@ -15,13 +14,7 @@ let exitAction: "quit" | "add" = "quit";
 function Header() {
   return (
     <Box flexDirection="column">
-      <Box>
-        <Text bold color="cyan">
-          {"  "}reveille
-        </Text>
-        <Text color="gray"> - AI Agent Task Scheduler</Text>
-        <Text color="gray"> v{VERSION}</Text>
-      </Box>
+      <Banner version={VERSION} />
       <Text color="gray">{"─".repeat(70)}</Text>
     </Box>
   );
@@ -42,16 +35,7 @@ function TaskRow({
   selected: boolean;
   lastExec?: Execution;
 }) {
-  let scheduleText = "manual";
-  if (task.scheduleType === "cron" && task.scheduleCron) {
-    try {
-      scheduleText = cronstrue.toString(task.scheduleCron);
-    } catch {
-      scheduleText = task.scheduleCron;
-    }
-  } else if (task.scheduleType === "interval" && task.scheduleIntervalSeconds) {
-    scheduleText = `every ${Math.round(task.scheduleIntervalSeconds / 60)}m`;
-  }
+  const scheduleText = formatSchedule(task);
 
   return (
     <Box>
@@ -318,6 +302,13 @@ function restoreTerminal() {
 }
 
 export default async function dashboard(_args: string[]) {
+  if (!process.stdin.isTTY) {
+    console.error("Interactive dashboard requires a TTY. Falling back to list view.");
+    const listCmd = await import("./list.js");
+    await listCmd.default([]);
+    return;
+  }
+
   exitAction = "quit";
 
   const { waitUntilExit } = render(<Dashboard />);
