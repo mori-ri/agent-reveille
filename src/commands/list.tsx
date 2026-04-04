@@ -1,7 +1,7 @@
 import React from "react";
 import { render, Box, Text } from "ink";
 import { listTasks, getTaskExecutions } from "../lib/tasks.js";
-import { isLoaded } from "../lib/scheduler.js";
+import { getScheduler } from "../lib/platform.js";
 import { formatRelativeTime, formatSchedule, formatStatus } from "../utils/format.js";
 
 function TaskList() {
@@ -45,7 +45,7 @@ function TaskList() {
       </Box>
       <Text color="gray">{"─".repeat(100)}</Text>
       {tasks.map((task) => {
-        const loaded = isLoaded(task.id);
+        const loaded = getScheduler().isActive(task.id);
         const status = task.scheduleType === "manual" ? "manual" : loaded ? "active" : "paused";
         const executions = getTaskExecutions(task.id, 1);
         const lastRun = executions[0];
