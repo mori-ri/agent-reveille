@@ -83,9 +83,14 @@ export function generatePlist(task: Task): string {
   const binPath = getBinPath();
   const label = `com.reveille.task.${task.id}`;
 
+  // In dev mode (.ts file), use tsx as the runner since launchd can't execute .ts directly
+  const programArgs = binPath.endsWith(".ts")
+    ? ["npx", "tsx", binPath, "run", task.id]
+    : [binPath, "run", task.id];
+
   const plist: Record<string, unknown> = {
     Label: label,
-    ProgramArguments: [binPath, "run", task.id],
+    ProgramArguments: programArgs,
     WorkingDirectory: task.workingDir,
     EnvironmentVariables: {
       PATH: getUserPath(),
