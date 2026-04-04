@@ -2,7 +2,7 @@
 
 [日本語版 README はこちら](README_ja.md)
 
-AI coding agent task scheduler for macOS. Schedule Claude Code, Codex, Gemini, and other AI agents to run automatically via launchd.
+AI agent task scheduler for macOS. Schedule Claude Code, Codex, Gemini, and other AI agents to run automatically via launchd — from development automation to daily routines.
 
 ```
 $ reveille list
@@ -12,7 +12,7 @@ $ reveille list
   ID       NAME              AGENT    SCHEDULE              STATUS      LAST RUN
   ─────────────────────────────────────────────────────────────────────────────────
   a1b2c3d4 Run tests         claude   At 09:03 AM           ● active    3 hours ago
-  e5f6g7h8 Lint & fix        claude   Every 2 hours         ● active    45 minutes ago
+  e5f6g7h8 Daily note        claude   At 08:00 AM           ● active    12 hours ago
   i9j0k1l2 Update deps       codex    At 12:00 AM, Mon      ● paused    3 days ago
 
   3 task(s)
@@ -20,12 +20,13 @@ $ reveille list
 
 ## Why reveille?
 
-AI coding agents like Claude Code can automate repetitive development tasks — running tests, fixing lint errors, updating dependencies, reviewing code. But scheduling them requires manual launchd plist configuration, environment variable management, and log handling.
+AI agents like Claude Code are not just coding tools — they can be your daily partner. Automate development tasks like running tests and fixing lint errors, but also personal routines like writing daily notes, journaling, or end-of-day reflections. But scheduling them requires manual launchd plist configuration, environment variable management, and log handling.
 
 reveille bridges this gap:
 
 - **One command to schedule** — no plist XML, no `launchctl` juggling
 - **Built for AI agents** — presets for Claude Code, Codex, Gemini, Aider
+- **Not just for code** — schedule daily notes, reflections, or any recurring agent task
 - **Execution tracking** — every run is logged with status, duration, and output
 - **TUI dashboard** — monitor all your scheduled agents in one view
 
@@ -228,6 +229,28 @@ reveille add \
   --dir ~/projects/my-app
 ```
 
+### Daily note every morning
+
+```bash
+reveille add \
+  --name "Daily note" \
+  --agent claude \
+  --cmd 'claude -p "Create today'\''s daily note in ~/notes/. Include the date, a summary of recent git activity across my projects, and a section for TODOs." --dangerously-skip-permissions' \
+  --cron "0 8 * * *" \
+  --dir ~/notes
+```
+
+### End-of-day reflection
+
+```bash
+reveille add \
+  --name "Evening reflection" \
+  --agent claude \
+  --cmd 'claude -p "Review what I worked on today based on git logs and open TODOs. Write a brief reflection in ~/notes/reflections/ with wins, blockers, and what to focus on tomorrow." --dangerously-skip-permissions' \
+  --cron "0 18 * * 1-5" \
+  --dir ~/notes
+```
+
 ### Manual task (run on demand only)
 
 ```bash
@@ -248,10 +271,30 @@ reveille add \
 | `0 10 * * 1` | Every Monday at 10:00 AM |
 | `0 0 1 * *` | First day of every month at midnight |
 
+## Claude Code Integration
+
+reveille ships with a [Claude Code skill](https://docs.anthropic.com/en/docs/claude-code/skills) so you can manage scheduled tasks directly from Claude Code conversations.
+
+### Setup
+
+The skill is automatically available when you open this project in Claude Code.
+
+### Usage
+
+Just type `/reveille` followed by what you want to do:
+
+```
+/reveille schedule daily tests at 9am
+/reveille show my tasks
+/reveille check the logs for task a1b2c3d4
+```
+
+Claude Code will translate your request into the appropriate `reveille` command and run it for you.
+
 ## Development
 
 ```bash
-git clone https://github.com/your-username/reveille.git
+git clone https://github.com/mori-ri/reveille.git
 cd reveille
 npm install
 
@@ -266,16 +309,6 @@ npm test
 # Build
 npm run build
 ```
-
-## Roadmap
-
-- [ ] Linux systemd timer support
-- [ ] Notification integrations (Slack, Discord, macOS notifications)
-- [ ] Task templates / presets
-- [ ] Cost tracking (API token usage)
-- [ ] Task chaining (run B after A succeeds)
-- [ ] Web dashboard
-- [ ] `reveille doctor` — diagnose common issues
 
 ## License
 
