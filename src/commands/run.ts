@@ -1,5 +1,6 @@
 import { executeTask } from "../lib/executor.js";
 import { getTask } from "../lib/tasks.js";
+import { parseTokenUsage, estimateCost, saveCostEntry } from "../lib/costs.js";
 import { formatDuration } from "../utils/format.js";
 
 export default async function run(args: string[]) {
@@ -28,6 +29,24 @@ export default async function run(args: string[]) {
         new Date(execution.finishedAt).getTime() - new Date(execution.startedAt).getTime()
       )
     : "?";
+
+  // Track cost if token usage is available
+  if (execution.stdoutTail) {
+    const usage = parseTokenUsage(execution.stdoutTail, task.agent);
+    if (usage) {
+      const cost = estimateCost(usage, task.agent);
+      saveCostEntry({
+        executionId: execution.id,
+        taskId: task.id,
+        timestamp: execution.startedAt,
+        agent: task.agent,
+        inputTokens: usage.inputTokens,
+        outputTokens: usage.outputTokens,
+        estimatedCost: cost,
+      });
+      console.log(`  Cost: ~$${cost.toFixed(4)} (${usage.inputTokens} in / ${usage.outputTokens} out)`);
+    }
+  }
 
   if (execution.status === "success") {
     console.log(`✓ Completed in ${duration} (exit code: ${execution.exitCode})`);
