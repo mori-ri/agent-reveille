@@ -9,7 +9,8 @@ import type { Task, Execution } from "../lib/schema.js";
 
 const VERSION = "0.1.0";
 
-let exitAction: "quit" | "add" = "quit";
+type ExitAction = "quit" | "add";
+let exitAction: ExitAction = "quit";
 
 function Header() {
   return (
@@ -309,14 +310,14 @@ export default async function dashboard(_args: string[]) {
     return;
   }
 
-  exitAction = "quit";
+  exitAction = "quit" as ExitAction;
 
   const { waitUntilExit } = render(<Dashboard />);
   await waitUntilExit();
 
   restoreTerminal();
 
-  if (exitAction === "add") {
+  if ((exitAction as ExitAction) === "add") {
     await new Promise((r) => setTimeout(r, 50));
     const addCmd = await import("./add.js");
     await addCmd.default([]);
