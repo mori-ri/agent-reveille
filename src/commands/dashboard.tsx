@@ -48,10 +48,10 @@ function TaskRow({
           {task.id}
         </Text>
       </Box>
-      <Box width={18}>
+      <Box width={20}>
         <Text bold={selected}>{task.name}</Text>
       </Box>
-      <Box width={8}>
+      <Box width={20}>
         <Text color="magenta">
           {task.agent}
           {task.model ? <Text color="gray">/{task.model}</Text> : null}
@@ -261,10 +261,10 @@ export function Dashboard() {
               <Box width={10}>
                 <Text bold color="gray">ID</Text>
               </Box>
-              <Box width={18}>
+              <Box width={20}>
                 <Text bold color="gray">NAME</Text>
               </Box>
-              <Box width={8}>
+              <Box width={20}>
                 <Text bold color="gray">AGENT</Text>
               </Box>
               <Box width={22}>

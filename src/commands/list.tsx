@@ -30,7 +30,7 @@ export function TaskList() {
         <Box width={20}>
           <Text bold color="gray">NAME</Text>
         </Box>
-        <Box width={10}>
+        <Box width={16}>
           <Text bold color="gray">AGENT</Text>
         </Box>
         <Box width={30}>
@@ -60,7 +60,7 @@ export function TaskList() {
             <Box width={20}>
               <Text>{task.name}</Text>
             </Box>
-            <Box width={10}>
+            <Box width={16}>
               <Text color="magenta">
                 {task.agent}
                 {task.model ? <Text color="gray">/{task.model}</Text> : null}
