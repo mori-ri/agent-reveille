@@ -1,12 +1,10 @@
-import { execSync as nodeExecSync } from "node:child_process";
-import { existsSync as nodeExistsSync, readFileSync as nodeReadFileSync, readdirSync as nodeReaddirSync } from "node:fs";
+import * as childProcess from "node:child_process";
+import * as fs from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { AGENTS } from "./agents.js";
 import { getBinPath as getRevBinPath } from "./paths.js";
 import type { Task } from "./schema.js";
-
-// --- Types ---
 
 export type CheckStatus = "pass" | "warn" | "fail";
 
@@ -34,54 +32,48 @@ export interface SystemEnv {
   getBinPath(): string;
 }
 
-// --- Default SystemEnv ---
-
 export function createSystemEnv(): SystemEnv {
+  function execSyncSafe(cmd: string): string | null {
+    try {
+      return childProcess.execSync(cmd, { encoding: "utf-8", timeout: 5000 }).trim();
+    } catch {
+      return null;
+    }
+  }
+
   return {
     which(binary: string): string | null {
-      try {
-        return nodeExecSync(`which ${binary}`, { encoding: "utf-8", timeout: 5000 }).trim() || null;
-      } catch {
-        return null;
-      }
+      return execSyncSafe(`which ${binary}`) || null;
     },
-    existsSync: nodeExistsSync,
+    existsSync(path: string): boolean {
+      return fs.existsSync(path);
+    },
     readFileSync(path: string): string | null {
       try {
-        return nodeReadFileSync(path, "utf-8");
+        return fs.readFileSync(path, "utf-8");
       } catch {
         return null;
       }
     },
     readdirSync(path: string): string[] {
       try {
-        return nodeReaddirSync(path);
+        return fs.readdirSync(path);
       } catch {
         return [];
       }
     },
-    execSync(cmd: string): string | null {
-      try {
-        return nodeExecSync(cmd, { encoding: "utf-8", timeout: 5000 }).trim();
-      } catch {
-        return null;
-      }
-    },
+    execSync: execSyncSafe,
     getLoginShellPath(): string {
-      try {
-        const shell = process.env.SHELL ?? "/bin/zsh";
-        return nodeExecSync(`${shell} -l -c 'echo $PATH'`, { encoding: "utf-8", timeout: 5000 }).trim();
-      } catch {
-        return process.env.PATH ?? "/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin";
-      }
+      const shell = process.env.SHELL ?? "/bin/zsh";
+      return execSyncSafe(`${shell} -l -c 'echo $PATH'`)
+        ?? process.env.PATH
+        ?? "/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin";
     },
     getCurrentPath: () => process.env.PATH ?? "/usr/bin:/bin",
     getHomedir: () => homedir(),
     getBinPath: () => getRevBinPath(),
   };
 }
-
-// --- Check Functions ---
 
 export function checkAgentBinaries(env: SystemEnv): DiagnosticCategory {
   const results: CheckResult[] = [];
@@ -138,14 +130,11 @@ export function checkLaunchAgentsDir(env: SystemEnv): DiagnosticCategory {
   const dir = join(env.getHomedir(), "Library", "LaunchAgents");
   const exists = env.existsSync(dir);
 
-  return {
-    category: "LaunchAgents Directory",
-    results: [
-      exists
-        ? { name: "launchagents-dir", status: "pass" as const, message: `${dir} exists` }
-        : { name: "launchagents-dir", status: "fail" as const, message: `${dir} not found`, detail: `Create it with: mkdir -p ${dir}` },
-    ],
-  };
+  const result: CheckResult = exists
+    ? { name: "launchagents-dir", status: "pass", message: `${dir} exists` }
+    : { name: "launchagents-dir", status: "fail", message: `${dir} not found`, detail: `Create it with: mkdir -p ${dir}` };
+
+  return { category: "LaunchAgents Directory", results: [result] };
 }
 
 export function checkPlistIntegrity(env: SystemEnv, tasks: Task[]): DiagnosticCategory {
@@ -171,7 +160,6 @@ export function checkPlistIntegrity(env: SystemEnv, tasks: Task[]): DiagnosticCa
     }
   }
 
-  // Check for orphan plists
   const allFiles = env.readdirSync(plistDir);
   const reveilleFiles = allFiles.filter((f) => f.startsWith("com.reveille.task.") && f.endsWith(".plist"));
   const taskIds = new Set(tasks.map((t) => t.id));
@@ -275,44 +263,34 @@ export function checkBinPath(env: SystemEnv): DiagnosticCategory {
   const binPath = env.getBinPath();
   const isDev = binPath.includes("tsx") || binPath.includes("ts-node");
 
+  let result: CheckResult;
   if (isDev) {
-    return {
-      category: "Binary Path",
-      results: [
-        {
-          name: "bin-path",
-          status: "warn",
-          message: `Running in dev mode (${binPath})`,
-          detail: "Scheduled tasks may reference a different binary path. Run `npm run build` for production use.",
-        },
-      ],
+    result = {
+      name: "bin-path",
+      status: "warn",
+      message: `Running in dev mode (${binPath})`,
+      detail: "Scheduled tasks may reference a different binary path. Run `npm run build` for production use.",
     };
+  } else if (env.existsSync(binPath)) {
+    result = { name: "bin-path", status: "pass", message: `reveille binary found at ${binPath}` };
+  } else {
+    result = { name: "bin-path", status: "fail", message: `reveille binary not found at ${binPath}` };
   }
 
-  const exists = env.existsSync(binPath);
-  return {
-    category: "Binary Path",
-    results: [
-      exists
-        ? { name: "bin-path", status: "pass" as const, message: `reveille binary found at ${binPath}` }
-        : { name: "bin-path", status: "fail" as const, message: `reveille binary not found at ${binPath}` },
-    ],
-  };
+  return { category: "Binary Path", results: [result] };
 }
 
-// --- Orchestrator ---
-
 export function runAllChecks(env?: SystemEnv, tasks?: Task[]): DiagnosticCategory[] {
-  const e = env ?? createSystemEnv();
-  const t = tasks ?? [];
+  const resolvedEnv = env ?? createSystemEnv();
+  const resolvedTasks = tasks ?? [];
 
   return [
-    checkAgentBinaries(e),
-    checkPathConfig(e),
-    checkLaunchAgentsDir(e),
-    checkPlistIntegrity(e, t),
-    checkLaunchdState(e, t),
-    checkConfiguration(e),
-    checkBinPath(e),
+    checkAgentBinaries(resolvedEnv),
+    checkPathConfig(resolvedEnv),
+    checkLaunchAgentsDir(resolvedEnv),
+    checkPlistIntegrity(resolvedEnv, resolvedTasks),
+    checkLaunchdState(resolvedEnv, resolvedTasks),
+    checkConfiguration(resolvedEnv),
+    checkBinPath(resolvedEnv),
   ];
 }

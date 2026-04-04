@@ -1,5 +1,6 @@
 import chalk from "chalk";
-import { runAllChecks, createSystemEnv, type DiagnosticCategory, type CheckStatus } from "../lib/doctor.js";
+import { createSystemEnv, runAllChecks, type CheckStatus, type DiagnosticCategory } from "../lib/doctor.js";
+import type { Task } from "../lib/schema.js";
 import { listTasks } from "../lib/tasks.js";
 
 const STATUS_ICON: Record<CheckStatus, string> = {
@@ -8,7 +9,7 @@ const STATUS_ICON: Record<CheckStatus, string> = {
   fail: chalk.red("✗"),
 };
 
-function printCategory(cat: DiagnosticCategory) {
+function printCategory(cat: DiagnosticCategory): void {
   console.log(`\n  ${chalk.bold(cat.category)}`);
   if (cat.results.length === 0) {
     console.log(chalk.dim("    No checks to run"));
@@ -22,11 +23,11 @@ function printCategory(cat: DiagnosticCategory) {
   }
 }
 
-export default async function doctor(_args: string[]) {
+export default async function doctor(_args: string[]): Promise<void> {
   console.log(chalk.bold("\nreveille doctor\n"));
 
   const env = createSystemEnv();
-  let tasks: ReturnType<typeof listTasks> = [];
+  let tasks: Task[] = [];
   try {
     tasks = listTasks();
   } catch {
@@ -34,21 +35,20 @@ export default async function doctor(_args: string[]) {
   }
 
   const categories = runAllChecks(env, tasks);
-
   for (const cat of categories) {
     printCategory(cat);
   }
 
-  const all = categories.flatMap((c) => c.results);
-  const passed = all.filter((r) => r.status === "pass").length;
-  const warnings = all.filter((r) => r.status === "warn").length;
-  const failures = all.filter((r) => r.status === "fail").length;
+  const counts = { pass: 0, warn: 0, fail: 0 };
+  for (const r of categories.flatMap((c) => c.results)) {
+    counts[r.status]++;
+  }
 
   console.log(
-    `\n  Summary: ${chalk.green(`${passed} passed`)}, ${chalk.yellow(`${warnings} warnings`)}, ${chalk.red(`${failures} failures`)}\n`
+    `\n  Summary: ${chalk.green(`${counts.pass} passed`)}, ${chalk.yellow(`${counts.warn} warnings`)}, ${chalk.red(`${counts.fail} failures`)}\n`
   );
 
-  if (failures > 0) {
+  if (counts.fail > 0) {
     process.exit(1);
   }
 }
