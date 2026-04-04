@@ -1,5 +1,5 @@
 import { deleteTask, getTask } from "../lib/tasks.js";
-import { uninstallPlist } from "../lib/scheduler.js";
+import { getScheduler } from "../lib/platform.js";
 
 export default async function remove(args: string[]) {
   const id = args[0];
@@ -14,7 +14,7 @@ export default async function remove(args: string[]) {
     process.exit(1);
   }
 
-  uninstallPlist(id);
+  getScheduler().uninstall(id);
   deleteTask(id);
   console.log(`✓ Removed task: ${task.name} (${id})`);
 }

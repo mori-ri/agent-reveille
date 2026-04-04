@@ -3,7 +3,7 @@ import { render, Box, Text, useInput, useApp } from "ink";
 import TextInput from "ink-text-input";
 import SelectInput from "ink-select-input";
 import { createTask } from "../lib/tasks.js";
-import { installPlist } from "../lib/scheduler.js";
+import { getScheduler } from "../lib/platform.js";
 import { detectInstalledAgents, buildCommand } from "../lib/agents.js";
 import type { AgentId, ScheduleType } from "../lib/schema.js";
 import cronstrue from "cronstrue";
@@ -69,7 +69,7 @@ function AddWizard() {
       });
 
       if (task.scheduleType !== "manual") {
-        installPlist(task);
+        getScheduler().install(task);
       }
 
       setTaskId(task.id);
@@ -262,7 +262,7 @@ export default async function add(args: string[]) {
     });
 
     if (task.scheduleType !== "manual") {
-      installPlist(task);
+      getScheduler().install(task);
     }
 
     console.log(`✓ Task created: ${name} (${task.id})`);

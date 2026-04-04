@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { render, Box, Text, useInput, useApp } from "ink";
 import { listTasks, getTaskExecutions, deleteTask, updateTask } from "../lib/tasks.js";
-import { isLoaded, uninstallPlist, installPlist } from "../lib/scheduler.js";
+import { getScheduler } from "../lib/platform.js";
 import { formatDuration, formatRelativeTime, formatSchedule, formatStatus } from "../utils/format.js";
 import { readLogFile } from "../lib/executor.js";
 import { Banner } from "../components/Banner.js";
@@ -21,7 +21,7 @@ function Header() {
 }
 
 function StatusBadge({ task }: { task: Task }) {
-  const loaded = isLoaded(task.id);
+  const loaded = getScheduler().isActive(task.id);
   const status = task.scheduleType === "manual" ? "manual" : loaded ? "active" : "paused";
   return <Text>{formatStatus(status)}</Text>;
 }
@@ -173,7 +173,7 @@ function Dashboard() {
     // Confirm delete flow
     if (confirmDelete) {
       if (input === "y" && selectedTask) {
-        uninstallPlist(selectedTask.id);
+        getScheduler().uninstall(selectedTask.id);
         deleteTask(selectedTask.id);
         setMessage(`Removed: ${selectedTask.name}`);
         setConfirmDelete(false);
@@ -203,13 +203,13 @@ function Dashboard() {
     }
 
     if (input === " " && selectedTask) {
-      const loaded = isLoaded(selectedTask.id);
+      const loaded = getScheduler().isActive(selectedTask.id);
       if (loaded) {
-        uninstallPlist(selectedTask.id);
+        getScheduler().uninstall(selectedTask.id);
         updateTask(selectedTask.id, { enabled: false });
         setMessage(`Disabled: ${selectedTask.name}`);
       } else {
-        installPlist(selectedTask);
+        getScheduler().install(selectedTask);
         updateTask(selectedTask.id, { enabled: true });
         setMessage(`Enabled: ${selectedTask.name}`);
       }

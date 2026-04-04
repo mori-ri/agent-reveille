@@ -1,5 +1,5 @@
 import { getTask, updateTask } from "../lib/tasks.js";
-import { uninstallPlist } from "../lib/scheduler.js";
+import { getScheduler, detectPlatform } from "../lib/platform.js";
 
 export default async function disable(args: string[]) {
   const id = args[0];
@@ -14,8 +14,10 @@ export default async function disable(args: string[]) {
     process.exit(1);
   }
 
-  uninstallPlist(id);
+  const scheduler = getScheduler();
+  scheduler.uninstall(id);
   updateTask(id, { enabled: false });
+  const backend = detectPlatform() === "linux" ? "systemd timer" : "launchd plist";
   console.log(`✓ Disabled: ${task.name} (${id})`);
-  console.log("  launchd plist unloaded.");
+  console.log(`  ${backend} unloaded.`);
 }
