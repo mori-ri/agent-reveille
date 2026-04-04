@@ -1,4 +1,4 @@
-import { writeFileSync, unlinkSync, existsSync } from "node:fs";
+import { writeFileSync, unlinkSync, existsSync, mkdirSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { parseExpression } from "cron-parser";
 import { serializePlist } from "../utils/plist.js";
@@ -116,41 +116,52 @@ export function generatePlist(task: Task): string {
   return serializePlist(plist as Record<string, never>);
 }
 
+function shouldSkipLaunchctl(): boolean {
+  return !!process.env.REVEILLE_SKIP_LAUNCHCTL;
+}
+
 export function installPlist(task: Task): void {
   const path = getPlistPath(task.id);
   const content = generatePlist(task);
 
   // Ensure LaunchAgents directory exists
   const dir = getPlistDir();
-  if (!existsSync(dir)) {
-    throw new Error(`LaunchAgents directory not found: ${dir}`);
-  }
+  mkdirSync(dir, { recursive: true });
 
-  // Unload first if already loaded
-  try {
-    execSync(`launchctl unload ${path}`, { stdio: "ignore" });
-  } catch {
-    // Ignore - may not be loaded
+  if (!shouldSkipLaunchctl()) {
+    // Unload first if already loaded
+    try {
+      execSync(`launchctl unload ${path}`, { stdio: "ignore" });
+    } catch {
+      // Ignore - may not be loaded
+    }
   }
 
   writeFileSync(path, content, "utf-8");
-  execSync(`launchctl load ${path}`);
+
+  if (!shouldSkipLaunchctl()) {
+    execSync(`launchctl load ${path}`);
+  }
 }
 
 export function uninstallPlist(taskId: string): void {
   const path = getPlistPath(taskId);
   if (!existsSync(path)) return;
 
-  try {
-    execSync(`launchctl unload ${path}`, { stdio: "ignore" });
-  } catch {
-    // Ignore
+  if (!shouldSkipLaunchctl()) {
+    try {
+      execSync(`launchctl unload ${path}`, { stdio: "ignore" });
+    } catch {
+      // Ignore
+    }
   }
 
   unlinkSync(path);
 }
 
 export function isLoaded(taskId: string): boolean {
+  if (shouldSkipLaunchctl()) return false;
+
   const label = `com.reveille.task.${taskId}`;
   try {
     execSync(`launchctl list ${label}`, { stdio: "ignore" });

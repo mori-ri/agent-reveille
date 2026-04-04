@@ -1,0 +1,82 @@
+[
+  {
+    "query": "E2Eテスト実行して",
+    "should_trigger": true
+  },
+  {
+    "query": "テストを走らせて、さっきの変更で何か壊れてないか確認したい",
+    "should_trigger": true
+  },
+  {
+    "query": "run the e2e tests and tell me if anything broke",
+    "should_trigger": true
+  },
+  {
+    "query": "list.tsxのコンポーネントテストだけ回して結果教えて",
+    "should_trigger": true
+  },
+  {
+    "query": "CLIのライフサイクルテストが通るか確認してほしい。add→run→removeの流れ",
+    "should_trigger": true
+  },
+  {
+    "query": "npm run test:e2e 実行して、失敗してたら原因調べて",
+    "should_trigger": true
+  },
+  {
+    "query": "dashboardコンポーネントのレンダリングが壊れてないかテストで確認して",
+    "should_trigger": true
+  },
+  {
+    "query": "さっきscheduler.tsを変更したんだけど、テスト全部通るか見てくれる？",
+    "should_trigger": true
+  },
+  {
+    "query": "ink-testing-libraryで書いたテストの結果どうなってる？",
+    "should_trigger": true
+  },
+  {
+    "query": "テスト結果のサマリーを出して。何件パスで何件失敗か知りたい",
+    "should_trigger": true
+  },
+  {
+    "query": "毎朝9時にclaude codeでテストを自動実行するタスクをスケジュールして",
+    "should_trigger": false
+  },
+  {
+    "query": "reveille addで新しいタスクを追加したい。codexで毎日コードレビューさせたい",
+    "should_trigger": false
+  },
+  {
+    "query": "スケジュールされてるタスクの一覧を見せて",
+    "should_trigger": false
+  },
+  {
+    "query": "test/e2e/cli/lifecycle.test.ts にenable/disableのテストケースを追加して",
+    "should_trigger": false
+  },
+  {
+    "query": "vitest.config.tsのタイムアウト設定を60秒に変更して",
+    "should_trigger": false
+  },
+  {
+    "query": "executor.tsのexecuteTask関数にタイムアウトのユニットテストを書いて",
+    "should_trigger": false
+  },
+  {
+    "query": "package.jsonのtest:e2eスクリプトを修正して、--reporterオプションを追加したい",
+    "should_trigger": false
+  },
+  {
+    "query": "このプロジェクトのREADMEにテストの実行方法を書いて",
+    "should_trigger": false
+  },
+  {
+    "query": "reveille run task123 を実行して結果を見せて",
+    "should_trigger": false
+  },
+  {
+    "query": "ink-testing-libraryのAPIについて教えて。stdinの使い方がわからない",
+    "should_trigger": false
+  }
+]

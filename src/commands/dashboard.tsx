@@ -136,7 +136,7 @@ function HelpBar() {
   );
 }
 
-function Dashboard() {
+export function Dashboard() {
   const { exit } = useApp();
   const [tasks, setTasks] = useState<Task[]>(listTasks());
   const [selectedIndex, setSelectedIndex] = useState(0);
