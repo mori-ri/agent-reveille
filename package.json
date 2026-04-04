@@ -1,7 +1,7 @@
 {
   "name": "reveille",
   "version": "0.1.0",
-  "description": "AI coding agent task scheduler with launchd integration",
+  "description": "AI agent task scheduler with launchd integration",
   "type": "module",
   "bin": {
     "reveille": "./dist/bin/reveille.js"

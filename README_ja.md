@@ -1,6 +1,6 @@
 # reveille
 
-macOS向け AIコーディングエージェント タスクスケジューラ。Claude Code、Codex、Gemini などのAIエージェントをlaunchdで自動定期実行できます。
+macOS向け AIエージェント タスクスケジューラ。Claude Code、Codex、Gemini などのAIエージェントをlaunchdで自動定期実行できます。開発の自動化から日々のルーティンまで。
 
 ```
 $ reveille list
@@ -10,7 +10,7 @@ $ reveille list
   ID       NAME              AGENT    SCHEDULE              STATUS      LAST RUN
   ─────────────────────────────────────────────────────────────────────────────────
   a1b2c3d4 Run tests         claude   At 09:03 AM           ● active    3 hours ago
-  e5f6g7h8 Lint & fix        claude   Every 2 hours         ● active    45 minutes ago
+  e5f6g7h8 Daily note        claude   At 08:00 AM           ● active    12 hours ago
   i9j0k1l2 Update deps       codex    At 12:00 AM, Mon      ● paused    3 days ago
 
   3 task(s)
@@ -18,12 +18,13 @@ $ reveille list
 
 ## なぜ reveille？
 
-Claude Code のようなAIコーディングエージェントは、テスト実行、lint修正、依存関係更新、コードレビューといった反復的な開発タスクを自動化できます。しかし、これらを定期実行するには launchd の plist を手書きし、環境変数を設定し、ログを管理する必要があります。
+Claude Code のようなAIエージェントは、単なるコーディングツールではありません。日々のパートナーとして活用できます。テスト実行やlint修正といった開発タスクはもちろん、デイリーノートの作成、ジャーナリング、一日の振り返りといった個人的なルーティンも自動化できます。しかし、これらを定期実行するには launchd の plist を手書きし、環境変数を設定し、ログを管理する必要があります。
 
 reveille はこのギャップを埋めます：
 
 - **コマンド一発でスケジュール設定** — plist XMLの手書きも `launchctl` 操作も不要
 - **AIエージェント専用設計** — Claude Code、Codex、Gemini、Aider のプリセット搭載
+- **コードだけじゃない** — デイリーノート、振り返り、あらゆる定期タスクをスケジュール
 - **実行追跡** — すべての実行がステータス・所要時間・出力とともに記録される
 - **TUIダッシュボード** — スケジュール済みエージェントを一画面で監視
 
@@ -226,6 +227,28 @@ reveille add \
   --dir ~/projects/my-app
 ```
 
+### 毎朝デイリーノートを作成
+
+```bash
+reveille add \
+  --name "デイリーノート" \
+  --agent claude \
+  --cmd 'claude -p "~/notes/ に今日のデイリーノートを作成してください。日付、各プロジェクトの最近のgit活動の要約、TODOセクションを含めてください。" --dangerously-skip-permissions' \
+  --cron "0 8 * * *" \
+  --dir ~/notes
+```
+
+### 一日の終わりに振り返り
+
+```bash
+reveille add \
+  --name "夕方の振り返り" \
+  --agent claude \
+  --cmd 'claude -p "gitログとTODOをもとに今日の作業を振り返り、~/notes/reflections/ に簡潔な振り返りを書いてください。成果、ブロッカー、明日の重点を含めてください。" --dangerously-skip-permissions' \
+  --cron "0 18 * * 1-5" \
+  --dir ~/notes
+```
+
 ### 手動タスク（オンデマンド実行のみ）
 
 ```bash
@@ -246,10 +269,30 @@ reveille add \
 | `0 10 * * 1` | 毎週月曜 10:00 |
 | `0 0 1 * *` | 毎月1日 0:00 |
 
+## Claude Code 連携
+
+reveille には [Claude Code スキル](https://docs.anthropic.com/en/docs/claude-code/skills)が同梱されており、Claude Code の会話からスケジュールタスクを直接管理できます。
+
+### セットアップ
+
+このプロジェクトを Claude Code で開くとスキルが自動的に利用可能になります。
+
+### 使い方
+
+`/reveille` に続けてやりたいことを入力するだけです：
+
+```
+/reveille 毎朝9時にテストをスケジュールして
+/reveille タスクを見せて
+/reveille タスク a1b2c3d4 のログを確認して
+```
+
+Claude Code がリクエストを適切な `reveille` コマンドに変換して実行します。
+
 ## 開発
 
 ```bash
-git clone https://github.com/your-username/reveille.git
+git clone https://github.com/mori-ri/reveille.git
 cd reveille
 npm install
 
@@ -264,16 +307,6 @@ npm test
 # ビルド
 npm run build
 ```
-
-## ロードマップ
-
-- [ ] Linux systemd timer 対応
-- [ ] 通知連携（Slack、Discord、macOS通知）
-- [ ] タスクテンプレート / プリセット
-- [ ] コスト追跡（APIトークン使用量）
-- [ ] タスクチェーン（Aの成功後にBを実行）
-- [ ] Webダッシュボード
-- [ ] `reveille doctor` — よくある問題の診断
 
 ## ライセンス
 

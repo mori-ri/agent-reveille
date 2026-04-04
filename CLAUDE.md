@@ -5,7 +5,7 @@ AI coding agent task scheduler with launchd integration.
 ## Tech Stack
 
 - TypeScript + Ink (React for CLI)
-- SQLite via better-sqlite3 for data storage
+- JSON file storage for task configs and execution history
 - launchd plist generation for macOS scheduling
 
 ## Project Structure
@@ -30,5 +30,5 @@ npm test                     # Run tests
 
 - launchd plists call `reveille run <id>`, not the agent directly
 - This allows automatic logging, timeout handling, and status tracking
-- Task configs and execution history stored in SQLite at ~/.config/reveille/reveille.db
+- Task configs stored in ~/.config/reveille/tasks.json, execution history in ~/.config/reveille/executions.json
 - Execution logs stored at ~/.local/share/reveille/logs/
