@@ -9,8 +9,8 @@
   "scripts": {
     "dev": "tsx bin/reveille.ts",
     "build": "tsup",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "vitest run --fileParallelism=false",
+    "test:watch": "vitest --fileParallelism=false",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [

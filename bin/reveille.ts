@@ -29,6 +29,9 @@ async function main() {
     case "dashboard":
       await (await import("../src/commands/dashboard.js")).default(args.slice(1));
       break;
+    case "web":
+      await (await import("../src/commands/web.js")).default(args.slice(1));
+      break;
     case "help":
     case "--help":
     case "-h":
@@ -62,6 +65,7 @@ function printHelp() {
     enable <id>        Enable task (load launchd plist)
     disable <id>       Disable task (unload launchd plist)
     dashboard          Open interactive TUI dashboard
+    web [port]         Start web dashboard (default: 3131)
 
   Options:
     -h, --help         Show this help
