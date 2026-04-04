@@ -2,16 +2,18 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { mkdirSync } from "node:fs";
 
-const home = homedir();
+function getHome(): string {
+  return process.env.REVEILLE_HOME ?? homedir();
+}
 
 export function getConfigDir(): string {
-  const dir = join(home, ".config", "reveille");
+  const dir = join(getHome(), ".config", "reveille");
   mkdirSync(dir, { recursive: true });
   return dir;
 }
 
 export function getDataDir(): string {
-  const dir = join(home, ".local", "share", "reveille");
+  const dir = join(getHome(), ".local", "share", "reveille");
   mkdirSync(dir, { recursive: true });
   return dir;
 }
@@ -32,7 +34,7 @@ export function getExecutionsFilePath(): string {
 }
 
 export function getPlistDir(): string {
-  return join(home, "Library", "LaunchAgents");
+  return join(getHome(), "Library", "LaunchAgents");
 }
 
 export function getPlistPath(taskId: string): string {
