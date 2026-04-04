@@ -1,5 +1,5 @@
 import { getTask, updateTask } from "../lib/tasks.js";
-import { installPlist } from "../lib/scheduler.js";
+import { getScheduler, detectPlatform } from "../lib/platform.js";
 
 export default async function enable(args: string[]) {
   const id = args[0];
@@ -14,8 +14,10 @@ export default async function enable(args: string[]) {
     process.exit(1);
   }
 
-  installPlist(task);
+  const scheduler = getScheduler();
+  scheduler.install(task);
   updateTask(id, { enabled: true });
+  const backend = detectPlatform() === "linux" ? "systemd timer" : "launchd plist";
   console.log(`✓ Enabled: ${task.name} (${id})`);
-  console.log("  launchd plist loaded.");
+  console.log(`  ${backend} loaded.`);
 }
