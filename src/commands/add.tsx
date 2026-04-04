@@ -20,7 +20,7 @@ interface TaskDraft {
   command: string;
 }
 
-function AddWizard() {
+export function AddWizard() {
   const { exit } = useApp();
   const [step, setStep] = useState<Step>("name");
   const [draft, setDraft] = useState<TaskDraft>({

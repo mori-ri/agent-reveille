@@ -1,22 +1,23 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createTask, getTask, listTasks, updateTask, deleteTask } from "../../src/lib/tasks.js";
 import { getTasksFilePath, getExecutionsFilePath } from "../../src/lib/paths.js";
-import { writeFileSync, unlinkSync, existsSync } from "node:fs";
+import { writeFileSync } from "node:fs";
+import { createTestEnv, type TestEnv } from "../helpers/setup.js";
 
 describe("tasks", () => {
-  const tasksPath = getTasksFilePath();
-  const execsPath = getExecutionsFilePath();
+  let env: TestEnv;
 
   beforeEach(() => {
-    // Start with clean state
+    env = createTestEnv();
+
+    const tasksPath = getTasksFilePath();
+    const execsPath = getExecutionsFilePath();
     writeFileSync(tasksPath, "[]", "utf-8");
     writeFileSync(execsPath, "[]", "utf-8");
   });
 
   afterEach(() => {
-    // Clean up
-    if (existsSync(tasksPath)) writeFileSync(tasksPath, "[]", "utf-8");
-    if (existsSync(execsPath)) writeFileSync(execsPath, "[]", "utf-8");
+    env.cleanup();
   });
 
   it("should create a task", () => {

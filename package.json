@@ -10,6 +10,8 @@
     "dev": "tsx bin/reveille.ts",
     "build": "tsup",
     "test": "vitest run",
+    "test:unit": "vitest run --project unit",
+    "test:e2e": "vitest run --project e2e",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
@@ -45,6 +47,7 @@
   },
   "devDependencies": {
     "@types/react": "^18.3.0",
+    "ink-testing-library": "^4.0.0",
     "tsup": "^8.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.7.0",

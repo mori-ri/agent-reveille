@@ -4,7 +4,7 @@ import { getTaskExecutions, getRecentExecutions, getTask } from "../lib/tasks.js
 import { formatDuration, formatRelativeTime, formatStatus } from "../utils/format.js";
 import type { Execution } from "../lib/schema.js";
 
-function ExecutionList({ executions, taskName }: { executions: Execution[]; taskName?: string }) {
+export function ExecutionList({ executions, taskName }: { executions: Execution[]; taskName?: string }) {
   if (executions.length === 0) {
     return (
       <Box paddingX={1}>
