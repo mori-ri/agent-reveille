@@ -4,7 +4,7 @@
   "description": "AI agent task scheduler with launchd integration",
   "type": "module",
   "bin": {
-    "reveille": "./dist/bin/reveille.js"
+    "reveille": "dist/bin/reveille.js"
   },
   "scripts": {
     "dev": "tsx bin/reveille.ts",
@@ -25,7 +25,16 @@
     "cli",
     "tui"
   ],
+  "author": "mori-ri",
   "license": "MIT",
+  "homepage": "https://github.com/mori-ri/agent-reveille#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mori-ri/agent-reveille.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mori-ri/agent-reveille/issues"
+  },
   "engines": {
     "node": ">=20"
   },
