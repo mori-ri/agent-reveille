@@ -1,5 +1,5 @@
 import { getTask, updateTask } from "../lib/tasks.js";
-import { getScheduler, detectPlatform } from "../lib/platform.js";
+import { getScheduler } from "../lib/platform.js";
 
 export default async function disable(args: string[]) {
   const id = args[0];
@@ -17,7 +17,6 @@ export default async function disable(args: string[]) {
   const scheduler = getScheduler();
   scheduler.uninstall(id);
   updateTask(id, { enabled: false });
-  const backend = detectPlatform() === "linux" ? "systemd timer" : "launchd plist";
   console.log(`✓ Disabled: ${task.name} (${id})`);
-  console.log(`  ${backend} unloaded.`);
+  console.log(`  ${scheduler.name} unloaded.`);
 }

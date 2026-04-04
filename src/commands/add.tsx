@@ -87,7 +87,7 @@ function AddWizard() {
           ✓ Task created: {draft.name} ({taskId})
         </Text>
         {draft.scheduleType !== "manual" && (
-          <Text color="gray">launchd plist installed and loaded.</Text>
+          <Text color="gray">{getScheduler().name} installed and loaded.</Text>
         )}
       </Box>
     );

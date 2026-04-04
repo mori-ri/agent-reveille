@@ -13,28 +13,41 @@ export function detectPlatform(): Platform {
 }
 
 export interface SchedulerBackend {
+  name: string;
   install(task: Task): void;
   uninstall(taskId: string): void;
   isActive(taskId: string): boolean;
 }
 
+const macosBackend: SchedulerBackend = {
+  name: "launchd plist",
+  install: installPlist,
+  uninstall: uninstallPlist,
+  isActive: isLoaded,
+};
+
+const linuxBackend: SchedulerBackend = {
+  name: "systemd timer",
+  install: installSystemdTimer,
+  uninstall: uninstallSystemdTimer,
+  isActive: isSystemdTimerActive,
+};
+
+let cachedScheduler: SchedulerBackend | undefined;
+
 export function getScheduler(): SchedulerBackend {
+  if (cachedScheduler) return cachedScheduler;
+
   const p = detectPlatform();
 
   if (p === "macos") {
-    return {
-      install: (task) => installPlist(task),
-      uninstall: (taskId) => uninstallPlist(taskId),
-      isActive: (taskId) => isLoaded(taskId),
-    };
+    cachedScheduler = macosBackend;
+    return cachedScheduler;
   }
 
   if (p === "linux") {
-    return {
-      install: (task) => installSystemdTimer(task),
-      uninstall: (taskId) => uninstallSystemdTimer(taskId),
-      isActive: (taskId) => isSystemdTimerActive(taskId),
-    };
+    cachedScheduler = linuxBackend;
+    return cachedScheduler;
   }
 
   throw new Error(`Unsupported platform: ${platform()}. reveille supports macOS (launchd) and Linux (systemd).`);

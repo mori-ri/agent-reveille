@@ -1,5 +1,5 @@
 import { getTask, updateTask } from "../lib/tasks.js";
-import { getScheduler, detectPlatform } from "../lib/platform.js";
+import { getScheduler } from "../lib/platform.js";
 
 export default async function enable(args: string[]) {
   const id = args[0];
@@ -17,7 +17,6 @@ export default async function enable(args: string[]) {
   const scheduler = getScheduler();
   scheduler.install(task);
   updateTask(id, { enabled: true });
-  const backend = detectPlatform() === "linux" ? "systemd timer" : "launchd plist";
   console.log(`✓ Enabled: ${task.name} (${id})`);
-  console.log(`  ${backend} loaded.`);
+  console.log(`  ${scheduler.name} loaded.`);
 }

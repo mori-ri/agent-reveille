@@ -87,9 +87,7 @@ WantedBy=timers.target
 // --- Systemd paths ---
 
 function getSystemdUserDir(): string {
-  const dir = join(homedir(), ".config", "systemd", "user");
-  mkdirSync(dir, { recursive: true });
-  return dir;
+  return join(homedir(), ".config", "systemd", "user");
 }
 
 function getServiceName(taskId: string): string {
@@ -107,6 +105,9 @@ function getTimerPath(taskId: string): string {
 // --- Install / Uninstall ---
 
 export function installSystemdTimer(task: Task): void {
+  const dir = getSystemdUserDir();
+  mkdirSync(dir, { recursive: true });
+
   const servicePath = getServicePath(task.id);
   const timerPath = getTimerPath(task.id);
 

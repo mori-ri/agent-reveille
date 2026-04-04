@@ -203,13 +203,14 @@ function Dashboard() {
     }
 
     if (input === " " && selectedTask) {
-      const loaded = getScheduler().isActive(selectedTask.id);
+      const scheduler = getScheduler();
+      const loaded = scheduler.isActive(selectedTask.id);
       if (loaded) {
-        getScheduler().uninstall(selectedTask.id);
+        scheduler.uninstall(selectedTask.id);
         updateTask(selectedTask.id, { enabled: false });
         setMessage(`Disabled: ${selectedTask.name}`);
       } else {
-        getScheduler().install(selectedTask);
+        scheduler.install(selectedTask);
         updateTask(selectedTask.id, { enabled: true });
         setMessage(`Enabled: ${selectedTask.name}`);
       }
