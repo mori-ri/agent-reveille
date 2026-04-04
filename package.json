@@ -1,5 +1,5 @@
 {
-  "name": "reveille",
+  "name": "agent-reveille",
   "version": "0.1.0",
   "description": "AI agent task scheduler with launchd integration",
   "type": "module",

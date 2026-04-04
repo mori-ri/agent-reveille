@@ -33,13 +33,13 @@ reveille bridges this gap:
 ## Install
 
 ```bash
-npm install -g reveille
+npm install -g agent-reveille
 ```
 
 Or run directly:
 
 ```bash
-npx reveille
+npx agent-reveille
 ```
 
 Requires Node.js 20+.
