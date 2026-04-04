@@ -3,6 +3,17 @@ name: Release
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version bump type"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
 
 permissions:
   contents: write
@@ -25,31 +36,32 @@ jobs:
 
       - run: npm run build
 
-      - name: Check if version tag exists
-        id: check
+      - name: Configure git
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version
+        id: bump
+        run: |
+          BUMP="${{ inputs.version || 'patch' }}"
+          npm version "$BUMP" --no-git-tag-version
           VERSION="v$(node -p "require('./package.json').version")"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          if git rev-parse "$VERSION" >/dev/null 2>&1; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
 
-      - name: Create Git tag
-        if: steps.check.outputs.exists == 'false'
+      - name: Commit, tag, and push
         run: |
-          git tag "${{ steps.check.outputs.version }}"
-          git push origin "${{ steps.check.outputs.version }}"
+          git add package.json package-lock.json
+          git commit -m "Release ${{ steps.bump.outputs.version }}"
+          git tag "${{ steps.bump.outputs.version }}"
+          git push origin main --tags
 
       - name: Create GitHub Release
-        if: steps.check.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${{ steps.check.outputs.version }}" --generate-notes
+        run: gh release create "${{ steps.bump.outputs.version }}" --generate-notes
 
       - name: Publish to npm
-        if: steps.check.outputs.exists == 'false'
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
