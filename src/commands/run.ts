@@ -15,7 +15,7 @@ export default async function run(args: string[]) {
     process.exit(1);
   }
 
-  console.log(`▶ Running: ${task.name} (${task.agent})`);
+  console.log(`▶ Running: ${task.name} (${task.agent}${task.model ? `/${task.model}` : ""})`);
   console.log(`  Command: ${task.command}`);
   console.log(`  Dir:     ${task.workingDir}`);
   console.log("");

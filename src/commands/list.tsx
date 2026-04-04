@@ -61,7 +61,10 @@ export function TaskList() {
               <Text>{task.name}</Text>
             </Box>
             <Box width={10}>
-              <Text color="magenta">{task.agent}</Text>
+              <Text color="magenta">
+                {task.agent}
+                {task.model ? <Text color="gray">/{task.model}</Text> : null}
+              </Text>
             </Box>
             <Box width={30}>
               <Text>{scheduleText}</Text>

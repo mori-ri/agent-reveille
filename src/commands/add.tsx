@@ -4,15 +4,16 @@ import TextInput from "ink-text-input";
 import SelectInput from "ink-select-input";
 import { createTask } from "../lib/tasks.js";
 import { installPlist } from "../lib/scheduler.js";
-import { detectInstalledAgents, buildCommand } from "../lib/agents.js";
+import { detectInstalledAgents, buildCommand, getAvailableModels } from "../lib/agents.js";
 import type { AgentId, ScheduleType } from "../lib/schema.js";
 import cronstrue from "cronstrue";
 
-type Step = "name" | "agent" | "prompt" | "workdir" | "schedule-type" | "schedule-value" | "confirm";
+type Step = "name" | "agent" | "model" | "prompt" | "workdir" | "schedule-type" | "schedule-value" | "confirm";
 
 interface TaskDraft {
   name: string;
   agent: AgentId;
+  model: string;
   prompt: string;
   workingDir: string;
   scheduleType: ScheduleType;
@@ -26,6 +27,7 @@ export function AddWizard() {
   const [draft, setDraft] = useState<TaskDraft>({
     name: "",
     agent: "claude",
+    model: "",
     prompt: "",
     workingDir: process.cwd(),
     scheduleType: "cron",
@@ -54,8 +56,9 @@ export function AddWizard() {
 
   function handleConfirm() {
     try {
+      const model = draft.model || undefined;
       const command =
-        draft.agent === "custom" ? draft.prompt : buildCommand(draft.agent, draft.prompt);
+        draft.agent === "custom" ? draft.prompt : buildCommand(draft.agent, draft.prompt, undefined, model);
 
       const task = createTask({
         name: draft.name,
@@ -66,6 +69,7 @@ export function AddWizard() {
         scheduleCron: draft.scheduleType === "cron" ? draft.scheduleCron : undefined,
         scheduleIntervalSeconds:
           draft.scheduleType === "interval" ? parseInt(draft.scheduleCron) * 60 : undefined,
+        model,
       });
 
       if (task.scheduleType !== "manual") {
@@ -122,6 +126,28 @@ export function AddWizard() {
             items={agentItems}
             onSelect={(item) => {
               setDraft({ ...draft, agent: item.value });
+              if (item.value === "custom") {
+                setStep("prompt");
+              } else {
+                setStep("model");
+              }
+            }}
+          />
+        </Box>
+      )}
+
+      {step === "model" && (
+        <Box flexDirection="column">
+          <Text>Model (leave empty for agent default):</Text>
+          {getAvailableModels(draft.agent).length > 0 && (
+            <Text color="gray">
+              Suggestions: {getAvailableModels(draft.agent).join(", ")}
+            </Text>
+          )}
+          <TextInput
+            value={draft.model}
+            onChange={(v) => setDraft({ ...draft, model: v })}
+            onSubmit={() => {
               setStep("prompt");
             }}
           />
@@ -206,11 +232,12 @@ export function AddWizard() {
           <Text bold>Summary:</Text>
           <Text>  Name:      {draft.name}</Text>
           <Text>  Agent:     {draft.agent}</Text>
+          {draft.model && <Text>  Model:     {draft.model}</Text>}
           <Text>
             {"  Command:   "}
             {draft.agent === "custom"
               ? draft.prompt
-              : buildCommand(draft.agent, draft.prompt)}
+              : buildCommand(draft.agent, draft.prompt, undefined, draft.model || undefined)}
           </Text>
           <Text>  Directory: {draft.workingDir}</Text>
           <Text>
@@ -244,6 +271,7 @@ export default async function add(args: string[]) {
   const cmdIdx = args.indexOf("--cmd");
   const cronIdx = args.indexOf("--cron");
   const dirIdx = args.indexOf("--dir");
+  const modelIdx = args.indexOf("--model");
 
   if (nameIdx !== -1 && cmdIdx !== -1) {
     const name = args[nameIdx + 1];
@@ -251,6 +279,7 @@ export default async function add(args: string[]) {
     const command = args[cmdIdx + 1];
     const cron = cronIdx !== -1 ? args[cronIdx + 1] : undefined;
     const dir = dirIdx !== -1 ? args[dirIdx + 1] : process.cwd();
+    const model = modelIdx !== -1 ? args[modelIdx + 1] : undefined;
 
     const task = createTask({
       name,
@@ -259,6 +288,7 @@ export default async function add(args: string[]) {
       workingDir: dir,
       scheduleType: cron ? "cron" : "manual",
       scheduleCron: cron,
+      model,
     });
 
     if (task.scheduleType !== "manual") {

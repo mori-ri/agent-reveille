@@ -74,4 +74,31 @@ describe("tasks", () => {
   it("should throw when deleting non-existent task", () => {
     expect(() => deleteTask("nonexistent")).toThrow("Task not found");
   });
+
+  it("should create a task with model", () => {
+    const task = createTask({
+      name: "Model Test",
+      agent: "claude",
+      command: 'claude -p "test" --model opus',
+      workingDir: "/tmp",
+      scheduleType: "manual",
+      model: "opus",
+    });
+
+    expect(task.model).toBe("opus");
+    const found = getTask(task.id);
+    expect(found!.model).toBe("opus");
+  });
+
+  it("should create a task without model", () => {
+    const task = createTask({
+      name: "No Model",
+      agent: "claude",
+      command: 'claude -p "test"',
+      workingDir: "/tmp",
+      scheduleType: "manual",
+    });
+
+    expect(task.model).toBeUndefined();
+  });
 });
