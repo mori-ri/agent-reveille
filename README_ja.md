@@ -31,13 +31,13 @@ reveille はこのギャップを埋めます：
 ## インストール
 
 ```bash
-npm install -g reveille
+npm install -g agent-reveille
 ```
 
 または直接実行：
 
 ```bash
-npx reveille
+npx agent-reveille
 ```
 
 Node.js 20 以上が必要です。
