@@ -1,9 +1,7 @@
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { readJson, writeJson } from "./db.js";
 import { getConfigDir } from "./paths.js";
-import type { AgentId } from "./schema.js";
-
-// --- Types ---
+import type { AgentId, Execution, Task } from "./schema.js";
 
 export interface TokenUsage {
   inputTokens: number;
@@ -37,36 +35,27 @@ export interface CostSummary {
   byTask: TaskCostSummary[];
 }
 
-// --- Approximate pricing per 1M tokens (USD) ---
+export interface CostSummaryOptions {
+  since?: Date;
+  taskId?: string;
+}
 
 const PRICING: Record<string, { input: number; output: number }> = {
   claude: { input: 3.0, output: 15.0 },
   codex: { input: 2.5, output: 10.0 },
   gemini: { input: 1.25, output: 5.0 },
-  aider: { input: 3.0, output: 15.0 }, // Uses Claude/GPT underneath
+  aider: { input: 3.0, output: 15.0 },
 };
-
-// --- Token parsing ---
 
 export function parseTokenUsage(stdout: string, agent: AgentId): TokenUsage | null {
   if (agent === "custom") return null;
 
-  let inputTokens = 0;
-  let outputTokens = 0;
-  let totalCost: number | undefined;
-
-  // Parse "Tokens: N input, N output" pattern (Claude Code format)
   const tokenMatch = stdout.match(/Tokens:\s*([\d,]+)\s*input,\s*([\d,]+)\s*output/i);
-  if (tokenMatch) {
-    inputTokens = parseInt(tokenMatch[1].replace(/,/g, ""), 10);
-    outputTokens = parseInt(tokenMatch[2].replace(/,/g, ""), 10);
-  }
-
-  // Parse "Total cost: $N.NN" pattern
   const costMatch = stdout.match(/Total cost:\s*\$([\d.]+)/i);
-  if (costMatch) {
-    totalCost = parseFloat(costMatch[1]);
-  }
+
+  const inputTokens = tokenMatch ? parseInt(tokenMatch[1].replace(/,/g, ""), 10) : 0;
+  const outputTokens = tokenMatch ? parseInt(tokenMatch[2].replace(/,/g, ""), 10) : 0;
+  const totalCost = costMatch ? parseFloat(costMatch[1]) : undefined;
 
   if (inputTokens === 0 && outputTokens === 0 && totalCost === undefined) {
     return null;
@@ -74,8 +63,6 @@ export function parseTokenUsage(stdout: string, agent: AgentId): TokenUsage | nu
 
   return { inputTokens, outputTokens, totalCost };
 }
-
-// --- Cost estimation ---
 
 export function estimateCost(usage: TokenUsage, agent: AgentId): number {
   if (usage.totalCost !== undefined) return usage.totalCost;
@@ -88,37 +75,41 @@ export function estimateCost(usage: TokenUsage, agent: AgentId): number {
   return inputCost + outputCost;
 }
 
-// --- Persistence ---
-
 function getCostsFilePath(): string {
   return join(getConfigDir(), "costs.json");
 }
 
 export function loadCostEntries(): CostEntry[] {
-  const path = getCostsFilePath();
-  if (!existsSync(path)) return [];
-  try {
-    return JSON.parse(readFileSync(path, "utf-8")) as CostEntry[];
-  } catch {
-    return [];
-  }
-}
-
-function saveCostEntries(entries: CostEntry[]): void {
-  writeFileSync(getCostsFilePath(), JSON.stringify(entries, null, 2), "utf-8");
+  return readJson<CostEntry[]>(getCostsFilePath(), []);
 }
 
 export function saveCostEntry(entry: CostEntry): void {
   const entries = loadCostEntries();
   entries.push(entry);
-  saveCostEntries(entries);
+  writeJson(getCostsFilePath(), entries);
 }
 
-// --- Summary ---
+/**
+ * Record cost data from a completed execution, if token usage is present.
+ * Returns the estimated cost, or null if no usage was detected.
+ */
+export function recordExecutionCost(execution: Execution, task: Task): number | null {
+  if (!execution.stdoutTail) return null;
 
-export interface CostSummaryOptions {
-  since?: Date;
-  taskId?: string;
+  const usage = parseTokenUsage(execution.stdoutTail, task.agent);
+  if (!usage) return null;
+
+  const cost = estimateCost(usage, task.agent);
+  saveCostEntry({
+    executionId: execution.id,
+    taskId: task.id,
+    timestamp: execution.startedAt,
+    agent: task.agent,
+    inputTokens: usage.inputTokens,
+    outputTokens: usage.outputTokens,
+    estimatedCost: cost,
+  });
+  return cost;
 }
 
 export function getCostSummary(options: CostSummaryOptions = {}): CostSummary {

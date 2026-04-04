@@ -7,7 +7,7 @@ interface Database {
   executions: Execution[];
 }
 
-function readJson<T>(filePath: string, fallback: T): T {
+export function readJson<T>(filePath: string, fallback: T): T {
   if (!existsSync(filePath)) return fallback;
   try {
     return JSON.parse(readFileSync(filePath, "utf-8")) as T;
@@ -16,7 +16,7 @@ function readJson<T>(filePath: string, fallback: T): T {
   }
 }
 
-function writeJson<T>(filePath: string, data: T): void {
+export function writeJson<T>(filePath: string, data: T): void {
   const tmpPath = filePath + ".tmp";
   writeFileSync(tmpPath, JSON.stringify(data, null, 2), "utf-8");
   renameSync(tmpPath, filePath);

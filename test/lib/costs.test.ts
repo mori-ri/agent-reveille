@@ -2,14 +2,13 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
   parseTokenUsage,
   estimateCost,
-  type TokenUsage,
-  type CostEntry,
   saveCostEntry,
   loadCostEntries,
   getCostSummary,
-  type CostSummary,
+  type TokenUsage,
+  type CostEntry,
 } from "../../src/lib/costs.js";
-import { writeFileSync, existsSync, unlinkSync } from "node:fs";
+import { writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { getConfigDir } from "../../src/lib/paths.js";
 
