@@ -14,6 +14,9 @@ async function main() {
     case "rm":
       await (await import("../src/commands/remove.js")).default(args.slice(1));
       break;
+    case "edit":
+      await (await import("../src/commands/edit.js")).default(args.slice(1));
+      break;
     case "run":
       await (await import("../src/commands/run.js")).default(args.slice(1));
       break;
@@ -55,6 +58,7 @@ function printHelp() {
 
   Commands:
     add                Create a new scheduled task
+    edit <id>          Edit an existing task
     list, ls           List all tasks
     remove, rm <id>    Remove a task
     run <id>           Execute a task immediately
