@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { handleApiRequest, type ApiResponse } from "../../src/lib/web-api.js";
+import { handleApiRequest } from "../../src/lib/web-api.js";
 import { createTask, listTasks } from "../../src/lib/tasks.js";
 import { getTasksFilePath, getExecutionsFilePath } from "../../src/lib/paths.js";
 import { writeFileSync, existsSync } from "node:fs";
@@ -86,9 +86,37 @@ describe("web-api", () => {
     });
   });
 
+  describe("GET /api/tasks/:id/executions", () => {
+    it("should return executions for a task", () => {
+      const task = createTask({ name: "Exec test", agent: "custom", command: "echo x", workingDir: "/tmp", scheduleType: "manual" });
+
+      const res = handleApiRequest("GET", `/api/tasks/${task.id}/executions`);
+      expect(res.status).toBe(200);
+      expect(JSON.parse(res.body)).toEqual([]);
+    });
+
+    it("should return 404 for unknown task", () => {
+      const res = handleApiRequest("GET", "/api/tasks/nonexistent/executions");
+      expect(res.status).toBe(404);
+    });
+  });
+
+  describe("query string handling", () => {
+    it("should ignore query strings on API paths", () => {
+      const res = handleApiRequest("GET", "/api/tasks?foo=bar");
+      expect(res.status).toBe(200);
+      expect(JSON.parse(res.body)).toEqual([]);
+    });
+  });
+
   describe("unknown routes", () => {
     it("should return 404 for unknown API paths", () => {
       const res = handleApiRequest("GET", "/api/unknown");
+      expect(res.status).toBe(404);
+    });
+
+    it("should return 404 for invalid task ID characters", () => {
+      const res = handleApiRequest("GET", "/api/tasks/../../etc");
       expect(res.status).toBe(404);
     });
   });

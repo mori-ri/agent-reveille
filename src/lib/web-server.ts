@@ -98,18 +98,18 @@ async function render() {
         '<span class="badge ' + status + '">' + status + '</span>' +
       '</div>' +
       '<div class="meta">' +
-        '<span>ID: ' + t.id + '</span>' +
-        '<span>Agent: ' + t.agent + '</span>' +
+        '<span>ID: ' + esc(t.id) + '</span>' +
+        '<span>Agent: ' + esc(t.agent) + '</span>' +
         '<span>Dir: ' + esc(t.workingDir) + '</span>' +
-        '<span>Schedule: ' + (t.scheduleCron || t.scheduleType) + '</span>' +
-        (lastExec ? '<span>Last: <span class="badge ' + lastExec.status + '">' + lastExec.status + '</span> ' + timeAgo(lastExec.finishedAt) + '</span>' : '') +
+        '<span>Schedule: ' + esc(t.scheduleCron || t.scheduleType) + '</span>' +
+        (lastExec ? '<span>Last: <span class="badge ' + lastExec.status + '">' + esc(lastExec.status) + '</span> ' + timeAgo(lastExec.finishedAt) + '</span>' : '') +
       '</div>' +
       '<div class="actions">' +
-        (t.scheduleType !== 'manual' ? '<button class="btn" onclick="toggleTask(\\''+t.id+'\\')">'+( t.enabled ? 'Disable' : 'Enable')+'</button>' : '') +
-        '<button class="btn danger" onclick="deleteTask(\\''+t.id+'\\')">Delete</button>' +
+        (t.scheduleType !== 'manual' ? '<button class="btn" onclick="toggleTask(\\''+esc(t.id)+'\\')">'+( t.enabled ? 'Disable' : 'Enable')+'</button>' : '') +
+        '<button class="btn danger" onclick="deleteTask(\\''+esc(t.id)+'\\')">Delete</button>' +
       '</div>' +
       (execs.length > 0 ? '<div class="exec-list">' + execs.map(e =>
-        '<div class="exec-item"><span class="badge '+e.status+'">'+e.status+'</span> '+timeAgo(e.finishedAt)+(e.stdoutTail ? ' — '+esc(e.stdoutTail.slice(0,80)) : '')+'</div>'
+        '<div class="exec-item"><span class="badge '+esc(e.status)+'">'+esc(e.status)+'</span> '+timeAgo(e.finishedAt)+(e.stdoutTail ? ' — '+esc(e.stdoutTail.slice(0,80)) : '')+'</div>'
       ).join('') + '</div>' : '') +
     '</div>';
   }).join('');
@@ -123,9 +123,15 @@ setInterval(render, 5000);
 </body>
 </html>`;
 
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+} as const;
+
 export function startWebServer(port: number): ReturnType<typeof createServer> {
   const server = createServer((req: IncomingMessage, res: ServerResponse) => {
-    const url = req.url ?? "/";
+    const url = (req.url ?? "/").split("?")[0];
     const method = req.method ?? "GET";
 
     // Serve dashboard HTML
@@ -135,12 +141,19 @@ export function startWebServer(port: number): ReturnType<typeof createServer> {
       return;
     }
 
+    // CORS preflight
+    if (method === "OPTIONS") {
+      res.writeHead(204, CORS_HEADERS);
+      res.end();
+      return;
+    }
+
     // API routes
     if (url.startsWith("/api/")) {
       const apiRes = handleApiRequest(method, url);
       res.writeHead(apiRes.status, {
         "Content-Type": apiRes.contentType ?? "application/json",
-        "Access-Control-Allow-Origin": "*",
+        ...CORS_HEADERS,
       });
       res.end(apiRes.body);
       return;
