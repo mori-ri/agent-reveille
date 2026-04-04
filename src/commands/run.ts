@@ -1,5 +1,6 @@
 import { executeTask } from "../lib/executor.js";
 import { getTask } from "../lib/tasks.js";
+import { sendNotifications } from "../lib/notify.js";
 import { formatDuration } from "../utils/format.js";
 
 export default async function run(args: string[]) {
@@ -28,6 +29,9 @@ export default async function run(args: string[]) {
         new Date(execution.finishedAt).getTime() - new Date(execution.startedAt).getTime()
       )
     : "?";
+
+  // Send notifications (non-blocking)
+  await sendNotifications(task, execution);
 
   if (execution.status === "success") {
     console.log(`✓ Completed in ${duration} (exit code: ${execution.exitCode})`);
