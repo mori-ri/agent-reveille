@@ -30,7 +30,6 @@ export default async function run(args: string[]) {
       )
     : "?";
 
-  // Send notifications (non-blocking)
   await sendNotifications(task, execution);
 
   if (execution.status === "success") {

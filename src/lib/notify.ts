@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
-import { execSync } from "node:child_process";
+import { readFileSync, writeFileSync, renameSync, existsSync } from "node:fs";
+import { execFile } from "node:child_process";
 import { join } from "node:path";
 import { getConfigDir } from "./paths.js";
 import { formatDuration } from "../utils/format.js";
@@ -50,18 +50,29 @@ export function loadNotifyConfig(): NotifyConfig {
 }
 
 export function saveNotifyConfig(config: NotifyConfig): void {
-  writeFileSync(getNotifyConfigPath(), JSON.stringify(config, null, 2), "utf-8");
+  const path = getNotifyConfigPath();
+  const tmpPath = path + ".tmp";
+  writeFileSync(tmpPath, JSON.stringify(config, null, 2), "utf-8");
+  renameSync(tmpPath, path);
 }
 
 // --- Message formatting ---
 
-export function formatNotificationMessage(task: Task, execution: Execution): NotificationMessage {
-  const status = execution.status === "success" ? "success"
-    : execution.status === "timeout" ? "timeout"
-    : "failed";
+function statusFromExecution(execution: Execution): "success" | "failed" | "timeout" {
+  if (execution.status === "success") return "success";
+  if (execution.status === "timeout") return "timeout";
+  return "failed";
+}
 
-  const statusEmoji = status === "success" ? "\u2713" : status === "timeout" ? "\u23f1" : "\u2717";
-  const title = `${statusEmoji} ${task.name} — ${status}`;
+const STATUS_ICONS: Record<NotificationMessage["status"], string> = {
+  success: "\u2713",
+  timeout: "\u23f1",
+  failed: "\u2717",
+};
+
+export function formatNotificationMessage(task: Task, execution: Execution): NotificationMessage {
+  const status = statusFromExecution(execution);
+  const title = `${STATUS_ICONS[status]} ${task.name} \u2014 ${status}`;
 
   const parts: string[] = [];
 
@@ -81,13 +92,18 @@ export function formatNotificationMessage(task: Task, execution: Execution): Not
 
 // --- Provider payloads ---
 
-export function buildSlackPayload(msg: NotificationMessage) {
-  const color = msg.status === "success" ? "good" : msg.status === "timeout" ? "warning" : "danger";
+const SLACK_COLORS: Record<NotificationMessage["status"], string> = {
+  success: "good",
+  timeout: "warning",
+  failed: "danger",
+};
+
+export function buildSlackPayload(msg: NotificationMessage): { text: string; attachments: Array<{ color: string; text: string; fallback: string }> } {
   return {
     text: msg.title,
     attachments: [
       {
-        color,
+        color: SLACK_COLORS[msg.status],
         text: msg.body,
         fallback: `${msg.title}\n${msg.body}`,
       },
@@ -95,22 +111,28 @@ export function buildSlackPayload(msg: NotificationMessage) {
   };
 }
 
-export function buildDiscordPayload(msg: NotificationMessage) {
-  const color = msg.status === "success" ? 0x2ecc71 : msg.status === "timeout" ? 0xf39c12 : 0xe74c3c;
+const DISCORD_COLORS: Record<NotificationMessage["status"], number> = {
+  success: 0x2ecc71,
+  timeout: 0xf39c12,
+  failed: 0xe74c3c,
+};
+
+export function buildDiscordPayload(msg: NotificationMessage): { embeds: Array<{ title: string; description: string; color: number }> } {
   return {
     embeds: [
       {
         title: msg.title,
         description: msg.body,
-        color,
+        color: DISCORD_COLORS[msg.status],
       },
     ],
   };
 }
 
-export function buildMacOSCommand(msg: NotificationMessage): string {
-  const escaped = (s: string) => s.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-  return `osascript -e 'display notification "${escaped(msg.body.split("\n")[0])}" with title "${escaped(msg.title)}" sound name "default"'`;
+export function buildMacOSNotificationArgs(msg: NotificationMessage): string[] {
+  const body = msg.body.split("\n")[0];
+  const script = `display notification ${JSON.stringify(body)} with title ${JSON.stringify(msg.title)} sound name "default"`;
+  return ["-e", script];
 }
 
 // --- Provider detection ---
@@ -126,14 +148,25 @@ export function getEnabledProviders(config: NotifyConfig): NotifyProvider[] {
 // --- Send notifications ---
 
 async function sendWebhook(url: string, payload: unknown): Promise<void> {
-  const body = JSON.stringify(payload);
   try {
-    execSync(`curl -s -o /dev/null -w "%{http_code}" -X POST -H "Content-Type: application/json" -d '${body.replace(/'/g, "'\\''")}' "${url}"`, {
-      timeout: 10000,
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(10_000),
     });
   } catch {
     // Silently fail - notifications should never block task execution
   }
+}
+
+function sendMacOSNotification(msg: NotificationMessage): Promise<void> {
+  return new Promise((resolve) => {
+    execFile("osascript", buildMacOSNotificationArgs(msg), { timeout: 5000 }, () => {
+      // Resolve regardless of success or failure
+      resolve();
+    });
+  });
 }
 
 export async function sendNotifications(task: Task, execution: Execution): Promise<void> {
@@ -145,20 +178,16 @@ export async function sendNotifications(task: Task, execution: Execution): Promi
 
   const promises: Promise<void>[] = [];
 
-  if (providers.includes("slack") && config.slack) {
+  if (config.slack) {
     promises.push(sendWebhook(config.slack.webhookUrl, buildSlackPayload(msg)));
   }
 
-  if (providers.includes("discord") && config.discord) {
+  if (config.discord) {
     promises.push(sendWebhook(config.discord.webhookUrl, buildDiscordPayload(msg)));
   }
 
   if (providers.includes("macos")) {
-    try {
-      execSync(buildMacOSCommand(msg), { timeout: 5000 });
-    } catch {
-      // Silently fail
-    }
+    promises.push(sendMacOSNotification(msg));
   }
 
   await Promise.allSettled(promises);

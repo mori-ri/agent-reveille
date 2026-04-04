@@ -6,27 +6,36 @@ import {
   type NotifyConfig,
 } from "../lib/notify.js";
 
-function printStatus(config: NotifyConfig) {
+function isValidWebhookUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function printStatus(config: NotifyConfig): void {
   const providers = getEnabledProviders(config);
 
   console.log(chalk.bold("\nNotification settings:\n"));
 
   if (config.slack?.webhookUrl) {
-    console.log(`  ${chalk.green("✓")} Slack: ${config.slack.webhookUrl.slice(0, 40)}...`);
+    console.log(`  ${chalk.green("\u2713")} Slack: ${config.slack.webhookUrl.slice(0, 40)}...`);
   } else {
-    console.log(`  ${chalk.dim("○")} Slack: not configured`);
+    console.log(`  ${chalk.dim("\u25cb")} Slack: not configured`);
   }
 
   if (config.discord?.webhookUrl) {
-    console.log(`  ${chalk.green("✓")} Discord: ${config.discord.webhookUrl.slice(0, 40)}...`);
+    console.log(`  ${chalk.green("\u2713")} Discord: ${config.discord.webhookUrl.slice(0, 40)}...`);
   } else {
-    console.log(`  ${chalk.dim("○")} Discord: not configured`);
+    console.log(`  ${chalk.dim("\u25cb")} Discord: not configured`);
   }
 
   if (config.macos?.enabled) {
-    console.log(`  ${chalk.green("✓")} macOS: enabled`);
+    console.log(`  ${chalk.green("\u2713")} macOS: enabled`);
   } else {
-    console.log(`  ${chalk.dim("○")} macOS: disabled`);
+    console.log(`  ${chalk.dim("\u25cb")} macOS: disabled`);
   }
 
   console.log(
@@ -34,7 +43,7 @@ function printStatus(config: NotifyConfig) {
   );
 }
 
-export default async function notify(args: string[]) {
+export default async function notify(args: string[]): Promise<void> {
   const subcommand = args[0];
 
   if (!subcommand || subcommand === "status") {
@@ -50,59 +59,50 @@ export default async function notify(args: string[]) {
 
   const config = loadNotifyConfig();
 
-  if (subcommand === "slack") {
-    const url = args[1];
-    if (!url) {
-      console.error("Usage: reveille notify slack <webhook-url>");
-      process.exit(1);
+  switch (subcommand) {
+    case "slack":
+    case "discord": {
+      const url = args[1];
+      if (!url) {
+        console.error(`Usage: reveille notify ${subcommand} <webhook-url>`);
+        process.exit(1);
+      }
+      if (!isValidWebhookUrl(url)) {
+        console.error("Error: webhook URL must be a valid HTTPS URL");
+        process.exit(1);
+      }
+      config[subcommand] = { webhookUrl: url };
+      saveNotifyConfig(config);
+      console.log(chalk.green(`\u2713 ${subcommand === "slack" ? "Slack" : "Discord"} webhook configured`));
+      return;
     }
-    config.slack = { webhookUrl: url };
-    saveNotifyConfig(config);
-    console.log(chalk.green("✓ Slack webhook configured"));
-    return;
-  }
 
-  if (subcommand === "discord") {
-    const url = args[1];
-    if (!url) {
-      console.error("Usage: reveille notify discord <webhook-url>");
-      process.exit(1);
+    case "macos": {
+      const toggle = args[1];
+      if (toggle !== "on" && toggle !== "off") {
+        console.error("Usage: reveille notify macos on|off");
+        process.exit(1);
+      }
+      config.macos = { enabled: toggle === "on" };
+      saveNotifyConfig(config);
+      console.log(chalk.green(`\u2713 macOS notifications ${toggle === "on" ? "enabled" : "disabled"}`));
+      return;
     }
-    config.discord = { webhookUrl: url };
-    saveNotifyConfig(config);
-    console.log(chalk.green("✓ Discord webhook configured"));
-    return;
-  }
 
-  if (subcommand === "macos") {
-    const toggle = args[1];
-    if (toggle !== "on" && toggle !== "off") {
-      console.error("Usage: reveille notify macos on|off");
-      process.exit(1);
+    case "remove": {
+      const provider = args[1];
+      if (provider !== "slack" && provider !== "discord" && provider !== "macos") {
+        console.error("Usage: reveille notify remove slack|discord|macos");
+        process.exit(1);
+      }
+      delete config[provider];
+      saveNotifyConfig(config);
+      console.log(chalk.green(`\u2713 ${provider} configuration removed`));
+      return;
     }
-    config.macos = { enabled: toggle === "on" };
-    saveNotifyConfig(config);
-    console.log(chalk.green(`✓ macOS notifications ${toggle === "on" ? "enabled" : "disabled"}`));
-    return;
-  }
 
-  if (subcommand === "remove") {
-    const provider = args[1];
-    if (provider === "slack") {
-      delete config.slack;
-    } else if (provider === "discord") {
-      delete config.discord;
-    } else if (provider === "macos") {
-      delete config.macos;
-    } else {
-      console.error("Usage: reveille notify remove slack|discord|macos");
+    default:
+      console.error(`Unknown subcommand: ${subcommand}`);
       process.exit(1);
-    }
-    saveNotifyConfig(config);
-    console.log(chalk.green(`✓ ${provider} configuration removed`));
-    return;
   }
-
-  console.error(`Unknown subcommand: ${subcommand}`);
-  process.exit(1);
 }

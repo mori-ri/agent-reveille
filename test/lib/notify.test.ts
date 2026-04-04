@@ -1,11 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import {
-  type NotifyConfig,
-  type NotifyProvider,
   formatNotificationMessage,
   buildSlackPayload,
   buildDiscordPayload,
-  buildMacOSCommand,
+  buildMacOSNotificationArgs,
   getEnabledProviders,
 } from "../../src/lib/notify.js";
 import type { Task, Execution } from "../../src/lib/schema.js";
@@ -114,13 +112,24 @@ describe("buildDiscordPayload", () => {
   });
 });
 
-describe("buildMacOSCommand", () => {
-  it("should return an osascript command", () => {
+describe("buildMacOSNotificationArgs", () => {
+  it("should return osascript arguments with display notification", () => {
     const msg = formatNotificationMessage(makeTask(), makeExecution());
-    const cmd = buildMacOSCommand(msg);
-    expect(cmd).toContain("osascript");
-    expect(cmd).toContain("display notification");
-    expect(cmd).toContain("Daily Tests");
+    const osascriptArgs = buildMacOSNotificationArgs(msg);
+    expect(osascriptArgs[0]).toBe("-e");
+    expect(osascriptArgs[1]).toContain("display notification");
+    expect(osascriptArgs[1]).toContain("Daily Tests");
+  });
+
+  it("should safely handle special characters in task names", () => {
+    const msg = formatNotificationMessage(
+      makeTask({ name: 'Test "with quotes" & backslash\\' }),
+      makeExecution(),
+    );
+    const osascriptArgs = buildMacOSNotificationArgs(msg);
+    // JSON.stringify handles escaping, so these should not break out of the string
+    expect(osascriptArgs[1]).toContain("with quotes");
+    expect(osascriptArgs[1]).toContain("backslash");
   });
 });
 
