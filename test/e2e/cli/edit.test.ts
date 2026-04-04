@@ -177,4 +177,158 @@ describe("CLI edit command", () => {
     expect(editResult.exitCode).toBe(0);
     expect(editResult.stdout).toContain("No changes");
   });
+
+  it("updates prompt and rebuilds command for claude agent", async () => {
+    // Create a task with claude agent
+    const addResult = await runCLI(
+      ["add", "--name", "Claude Task", "--agent", "claude", "--cmd", 'claude -p "original prompt" --dangerously-skip-permissions', "--dir", "/tmp"],
+      env.tmpDir,
+    );
+    const idMatch = addResult.stdout.match(/\(([a-zA-Z0-9_-]+)\)/);
+    expect(idMatch).not.toBeNull();
+    const taskId = idMatch![1];
+
+    // Edit the prompt
+    const editResult = await runCLI(
+      ["edit", taskId, "--prompt", "updated prompt"],
+      env.tmpDir,
+    );
+    expect(editResult.exitCode).toBe(0);
+    expect(editResult.stdout).toContain("updated prompt");
+    // Command should be rebuilt with new prompt
+    expect(editResult.stdout).toContain("claude -p");
+    expect(editResult.stdout).toContain("--dangerously-skip-permissions");
+  });
+
+  it("shows prompt in output when task has prompt field", async () => {
+    const addResult = await runCLI(
+      ["add", "--name", "Prompt Show", "--agent", "claude", "--cmd", 'claude -p "show me" --dangerously-skip-permissions', "--dir", "/tmp"],
+      env.tmpDir,
+    );
+    const idMatch = addResult.stdout.match(/\(([a-zA-Z0-9_-]+)\)/);
+    const taskId = idMatch![1];
+
+    // Set the prompt via edit
+    const editResult = await runCLI(
+      ["edit", taskId, "--prompt", "visible prompt"],
+      env.tmpDir,
+    );
+    expect(editResult.exitCode).toBe(0);
+    expect(editResult.stdout).toContain("Prompt:    visible prompt");
+  });
+
+  it("updates prompt and rebuilds command for codex agent", async () => {
+    const addResult = await runCLI(
+      ["add", "--name", "Codex Task", "--agent", "codex", "--cmd", 'codex -q "old prompt"', "--dir", "/tmp"],
+      env.tmpDir,
+    );
+    const idMatch = addResult.stdout.match(/\(([a-zA-Z0-9_-]+)\)/);
+    const taskId = idMatch![1];
+
+    const editResult = await runCLI(
+      ["edit", taskId, "--prompt", "new codex prompt"],
+      env.tmpDir,
+    );
+    expect(editResult.exitCode).toBe(0);
+    expect(editResult.stdout).toContain("new codex prompt");
+    expect(editResult.stdout).toContain("codex -q");
+  });
+
+  it("does not rebuild command for custom agent when --prompt is used", async () => {
+    const addResult = await runCLI(
+      ["add", "--name", "Custom Agent", "--agent", "custom", "--cmd", "echo custom", "--dir", "/tmp"],
+      env.tmpDir,
+    );
+    const idMatch = addResult.stdout.match(/\(([a-zA-Z0-9_-]+)\)/);
+    const taskId = idMatch![1];
+
+    // --prompt on custom agent stores the prompt but does not rebuild command
+    const editResult = await runCLI(
+      ["edit", taskId, "--prompt", "custom prompt"],
+      env.tmpDir,
+    );
+    expect(editResult.exitCode).toBe(0);
+    // Command should remain unchanged
+    expect(editResult.stdout).toContain("echo custom");
+  });
+
+  it("combines --prompt with --name and --dir", async () => {
+    const addResult = await runCLI(
+      ["add", "--name", "Multi Prompt", "--agent", "claude", "--cmd", 'claude -p "initial" --dangerously-skip-permissions', "--dir", "/tmp"],
+      env.tmpDir,
+    );
+    const idMatch = addResult.stdout.match(/\(([a-zA-Z0-9_-]+)\)/);
+    const taskId = idMatch![1];
+
+    const editResult = await runCLI(
+      ["edit", taskId, "--name", "Updated Multi", "--prompt", "new multi prompt", "--dir", "/var"],
+      env.tmpDir,
+    );
+    expect(editResult.exitCode).toBe(0);
+    expect(editResult.stdout).toContain("Updated Multi");
+    expect(editResult.stdout).toContain("new multi prompt");
+    expect(editResult.stdout).toContain("/var");
+  });
+
+  it("--cmd overrides --prompt when both provided", async () => {
+    const addResult = await runCLI(
+      ["add", "--name", "Override Test", "--agent", "claude", "--cmd", 'claude -p "orig" --dangerously-skip-permissions', "--dir", "/tmp"],
+      env.tmpDir,
+    );
+    const idMatch = addResult.stdout.match(/\(([a-zA-Z0-9_-]+)\)/);
+    const taskId = idMatch![1];
+
+    // When both --prompt and --cmd are given, --cmd should win (applied after)
+    const editResult = await runCLI(
+      ["edit", taskId, "--prompt", "prompt value", "--cmd", "echo overridden"],
+      env.tmpDir,
+    );
+    expect(editResult.exitCode).toBe(0);
+    expect(editResult.stdout).toContain("echo overridden");
+  });
+
+  it("non-TTY fallback shows prompt hint in flags list", async () => {
+    const addResult = await runCLI(
+      ["add", "--name", "Hint Test", "--cmd", "echo hi", "--dir", "/tmp"],
+      env.tmpDir,
+    );
+    const idMatch = addResult.stdout.match(/\(([a-zA-Z0-9_-]+)\)/);
+    const taskId = idMatch![1];
+
+    const editResult = await runCLI(
+      ["edit", taskId],
+      env.tmpDir,
+    );
+    expect(editResult.exitCode).toBe(0);
+    expect(editResult.stdout).toContain("--prompt");
+  });
+
+  it("non-TTY fallback shows stored prompt", async () => {
+    const addResult = await runCLI(
+      ["add", "--name", "Stored Prompt", "--agent", "claude", "--cmd", 'claude -p "stored" --dangerously-skip-permissions', "--dir", "/tmp"],
+      env.tmpDir,
+    );
+    const idMatch = addResult.stdout.match(/\(([a-zA-Z0-9_-]+)\)/);
+    const taskId = idMatch![1];
+
+    // First set a prompt
+    await runCLI(
+      ["edit", taskId, "--prompt", "my stored prompt"],
+      env.tmpDir,
+    );
+
+    // Then view without flags
+    const viewResult = await runCLI(
+      ["edit", taskId],
+      env.tmpDir,
+    );
+    expect(viewResult.exitCode).toBe(0);
+    expect(viewResult.stdout).toContain("my stored prompt");
+  });
+
+  it("shows usage with --prompt in help text", async () => {
+    const result = await runCLI(["edit"], env.tmpDir);
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain("--prompt");
+  });
 });

@@ -18,6 +18,7 @@ Registered tasks:
 
 ```
 reveille add       # Interactive task creation wizard
+reveille edit <id> # Edit an existing task (interactive wizard)
 reveille list      # List all tasks with status
 reveille run <id>  # Execute a task immediately
 reveille logs [id] # View execution history
@@ -36,6 +37,22 @@ reveille add --name "<name>" --agent <agent> --cmd '<command>' --cron "<cron>" -
 - `--cron`: Standard 5-field cron expression (minute hour day month weekday)
 - `--dir`: Working directory (defaults to cwd)
 
+### Non-interactive task editing
+
+```
+reveille edit <id> --prompt "<new prompt>"
+reveille edit <id> --name "<name>" --cmd '<command>' --cron "<cron>" --dir <path>
+```
+
+- `--prompt`: Update the agent prompt (automatically rebuilds the command)
+- `--name`: Update the task name
+- `--cmd`: Update the raw command (overrides prompt)
+- `--cron`: Set cron schedule
+- `--interval`: Set interval schedule (seconds)
+- `--dir`: Update working directory
+
+When called without flags, opens the interactive edit wizard.
+
 ## How to Handle User Requests
 
 ### "Schedule a task" / "Set up a recurring job"
@@ -48,6 +65,16 @@ reveille add --name "<name>" --agent <agent> --cmd '<command>' --cron "<cron>" -
 2. Construct the non-interactive `reveille add` command
 3. Run it via Bash
 4. Confirm the task was created and explain the schedule
+
+### "Edit a task" / "Change the prompt" / "Update the schedule"
+
+1. Get the task ID (from `reveille list` or user input)
+2. Determine what to change:
+   - **Prompt**: Use `--prompt` flag (auto-rebuilds agent command)
+   - **Schedule**: Use `--cron` or `--interval` flag
+   - **Name/directory**: Use `--name` or `--dir` flag
+3. Run the `reveille edit <id> --prompt "new prompt" --cron "..."` command
+4. Confirm the update to the user
 
 ### "Show my tasks" / "What's scheduled?"
 
