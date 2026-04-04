@@ -29,6 +29,9 @@ async function main() {
     case "dashboard":
       await (await import("../src/commands/dashboard.js")).default(args.slice(1));
       break;
+    case "templates":
+      await (await import("../src/commands/templates.js")).default(args.slice(1));
+      break;
     case "help":
     case "--help":
     case "-h":
@@ -54,7 +57,8 @@ function printHelp() {
   Usage: reveille <command> [options]
 
   Commands:
-    add                Create a new scheduled task
+    add                Create a new scheduled task (supports --template)
+    templates          List available task templates
     list, ls           List all tasks
     remove, rm <id>    Remove a task
     run <id>           Execute a task immediately

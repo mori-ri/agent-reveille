@@ -5,10 +5,12 @@ import SelectInput from "ink-select-input";
 import { createTask } from "../lib/tasks.js";
 import { installPlist } from "../lib/scheduler.js";
 import { detectInstalledAgents, buildCommand } from "../lib/agents.js";
+import { listTemplates, templateToTaskInput } from "../lib/templates.js";
 import type { AgentId, ScheduleType } from "../lib/schema.js";
+import type { TaskTemplate } from "../lib/templates.js";
 import cronstrue from "cronstrue";
 
-type Step = "name" | "agent" | "prompt" | "workdir" | "schedule-type" | "schedule-value" | "confirm";
+type Step = "template" | "name" | "agent" | "prompt" | "workdir" | "schedule-type" | "schedule-value" | "confirm";
 
 interface TaskDraft {
   name: string;
@@ -22,7 +24,8 @@ interface TaskDraft {
 
 export function AddWizard() {
   const { exit } = useApp();
-  const [step, setStep] = useState<Step>("name");
+  const [step, setStep] = useState<Step>("template");
+  const [selectedTemplate, setSelectedTemplate] = useState<TaskTemplate | null>(null);
   const [draft, setDraft] = useState<TaskDraft>({
     name: "",
     agent: "claude",
@@ -37,6 +40,15 @@ export function AddWizard() {
   const [taskId, setTaskId] = useState("");
 
   const agents = detectInstalledAgents();
+  const templates = listTemplates();
+
+  const templateItems = [
+    ...templates.map((t) => ({
+      label: `${t.label} — ${t.description}`,
+      value: t.id,
+    })),
+    { label: "Custom (start from scratch)", value: "__custom__" },
+  ];
 
   const agentItems = [
     ...agents.map((a) => ({
@@ -101,6 +113,32 @@ export function AddWizard() {
       <Text> </Text>
 
       {error && <Text color="red">{error}</Text>}
+
+      {step === "template" && (
+        <Box flexDirection="column">
+          <Text>Start from a template or create custom:</Text>
+          <SelectInput
+            items={templateItems}
+            onSelect={(item) => {
+              if (item.value === "__custom__") {
+                setStep("name");
+              } else {
+                const tmpl = templates.find((t) => t.id === item.value)!;
+                setSelectedTemplate(tmpl);
+                setDraft({
+                  ...draft,
+                  name: tmpl.label,
+                  agent: tmpl.agent,
+                  prompt: tmpl.prompt,
+                  scheduleType: tmpl.scheduleType,
+                  scheduleCron: tmpl.scheduleCron ?? draft.scheduleCron,
+                });
+                setStep("workdir");
+              }
+            }}
+          />
+        </Box>
+      )}
 
       {step === "name" && (
         <Box flexDirection="column">
@@ -244,6 +282,31 @@ export default async function add(args: string[]) {
   const cmdIdx = args.indexOf("--cmd");
   const cronIdx = args.indexOf("--cron");
   const dirIdx = args.indexOf("--dir");
+  const templateIdx = args.indexOf("--template");
+
+  // Template-based non-interactive mode
+  if (templateIdx !== -1) {
+    const templateId = args[templateIdx + 1];
+    const { getTemplate, templateToTaskInput } = await import("../lib/templates.js");
+    const tmpl = getTemplate(templateId);
+    if (!tmpl) {
+      console.error(`Unknown template: ${templateId}`);
+      console.error(`Available: ${listTemplates().map((t) => t.id).join(", ")}`);
+      process.exit(1);
+    }
+    const dir = dirIdx !== -1 ? args[dirIdx + 1] : process.cwd();
+    const name = nameIdx !== -1 ? args[nameIdx + 1] : undefined;
+    const cron = cronIdx !== -1 ? args[cronIdx + 1] : undefined;
+    const input = templateToTaskInput(tmpl, { workingDir: dir, name, scheduleCron: cron });
+    const task = createTask(input);
+
+    if (task.scheduleType !== "manual") {
+      installPlist(task);
+    }
+
+    console.log(`✓ Task created from template "${tmpl.label}": ${task.name} (${task.id})`);
+    return;
+  }
 
   if (nameIdx !== -1 && cmdIdx !== -1) {
     const name = args[nameIdx + 1];
