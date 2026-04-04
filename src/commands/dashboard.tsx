@@ -48,11 +48,14 @@ function TaskRow({
           {task.id}
         </Text>
       </Box>
-      <Box width={18}>
+      <Box width={20}>
         <Text bold={selected}>{task.name}</Text>
       </Box>
-      <Box width={8}>
-        <Text color="magenta">{task.agent}</Text>
+      <Box width={20}>
+        <Text color="magenta">
+          {task.agent}
+          {task.model ? <Text color="gray">/{task.model}</Text> : null}
+        </Text>
       </Box>
       <Box width={22}>
         <Text>{scheduleText}</Text>
@@ -81,6 +84,12 @@ function DetailPanel({ task, executions }: { task: Task; executions: Execution[]
         <Text color="gray">Command: </Text>
         <Text>{task.command}</Text>
       </Text>
+      {task.model && (
+        <Text>
+          <Text color="gray">Model:   </Text>
+          <Text>{task.model}</Text>
+        </Text>
+      )}
       <Text>
         <Text color="gray">Dir:     </Text>
         <Text>{task.workingDir}</Text>
@@ -252,10 +261,10 @@ export function Dashboard() {
               <Box width={10}>
                 <Text bold color="gray">ID</Text>
               </Box>
-              <Box width={18}>
+              <Box width={20}>
                 <Text bold color="gray">NAME</Text>
               </Box>
-              <Box width={8}>
+              <Box width={20}>
                 <Text bold color="gray">AGENT</Text>
               </Box>
               <Box width={22}>

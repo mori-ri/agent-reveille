@@ -21,6 +21,7 @@ export const TaskSchema = z.object({
   scheduleType: ScheduleType,
   scheduleCron: z.string().optional(),
   scheduleIntervalSeconds: z.number().positive().optional(),
+  model: z.string().optional(),
   enabled: z.boolean().default(true),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -35,6 +36,7 @@ export const CreateTaskInput = z.object({
   scheduleType: ScheduleType,
   scheduleCron: z.string().optional(),
   scheduleIntervalSeconds: z.number().positive().optional(),
+  model: z.string().optional(),
 });
 export type CreateTaskInput = z.infer<typeof CreateTaskInput>;
 
