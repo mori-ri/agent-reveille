@@ -4,7 +4,7 @@ import { listTasks, getTaskExecutions } from "../lib/tasks.js";
 import { isLoaded } from "../lib/scheduler.js";
 import { formatRelativeTime, formatSchedule, formatStatus } from "../utils/format.js";
 
-function TaskList() {
+export function TaskList() {
   const tasks = listTasks();
 
   if (tasks.length === 0) {
