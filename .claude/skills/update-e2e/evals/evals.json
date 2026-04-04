@@ -1,0 +1,82 @@
+[
+  {
+    "query": "editコマンドのE2Eテストを追加して",
+    "should_trigger": true
+  },
+  {
+    "query": "テスト書いて、さっき追加したdisableコマンドのテストが必要",
+    "should_trigger": true
+  },
+  {
+    "query": "dashboardのコンポーネントテストを更新して。eキーバインドの分を足して",
+    "should_trigger": true
+  },
+  {
+    "query": "add tests for the new --prompt flag in the edit command",
+    "should_trigger": true
+  },
+  {
+    "query": "CLI lifecycle testにenable/disableの流れを追加したい",
+    "should_trigger": true
+  },
+  {
+    "query": "テスト更新して。出力フォーマットが変わったからアサーション直して",
+    "should_trigger": true
+  },
+  {
+    "query": "新しいコマンドにE2Eテストが足りないから書いて",
+    "should_trigger": true
+  },
+  {
+    "query": "コンポーネントテストでログ表示のテストケースを追加して",
+    "should_trigger": true
+  },
+  {
+    "query": "write component tests for the AddWizard",
+    "should_trigger": true
+  },
+  {
+    "query": "エラーハンドリングのテストケースを追加して。存在しないタスクIDのケース",
+    "should_trigger": true
+  },
+  {
+    "query": "E2Eテスト実行して",
+    "should_trigger": false
+  },
+  {
+    "query": "テストを走らせて結果教えて",
+    "should_trigger": false
+  },
+  {
+    "query": "npm test 実行して",
+    "should_trigger": false
+  },
+  {
+    "query": "毎朝9時にclaude codeでコードレビューするタスクをスケジュールして",
+    "should_trigger": false
+  },
+  {
+    "query": "reveille addで新しいタスクを追加したい",
+    "should_trigger": false
+  },
+  {
+    "query": "executor.tsのタイムアウト処理を修正して",
+    "should_trigger": false
+  },
+  {
+    "query": "package.jsonのtest:e2eスクリプトを修正して",
+    "should_trigger": false
+  },
+  {
+    "query": "vitest.config.tsの設定を変更したい",
+    "should_trigger": false
+  },
+  {
+    "query": "テスト失敗してるから原因調べて",
+    "should_trigger": false
+  },
+  {
+    "query": "このプロジェクトのREADMEを更新して",
+    "should_trigger": false
+  }
+]
