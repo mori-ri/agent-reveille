@@ -3,17 +3,9 @@ import {
   loadNotifyConfig,
   saveNotifyConfig,
   getEnabledProviders,
+  isValidWebhookUrl,
   type NotifyConfig,
 } from "../lib/notify.js";
-
-function isValidWebhookUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url);
-    return parsed.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
 
 function printStatus(config: NotifyConfig): void {
   const providers = getEnabledProviders(config);

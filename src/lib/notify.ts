@@ -33,6 +33,17 @@ export interface NotificationMessage {
   status: "success" | "failed" | "timeout";
 }
 
+// --- Validation ---
+
+export function isValidWebhookUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 // --- Config persistence ---
 
 function getNotifyConfigPath(): string {
@@ -178,11 +189,11 @@ export async function sendNotifications(task: Task, execution: Execution): Promi
 
   const promises: Promise<void>[] = [];
 
-  if (config.slack) {
+  if (providers.includes("slack") && config.slack) {
     promises.push(sendWebhook(config.slack.webhookUrl, buildSlackPayload(msg)));
   }
 
-  if (config.discord) {
+  if (providers.includes("discord") && config.discord) {
     promises.push(sendWebhook(config.discord.webhookUrl, buildDiscordPayload(msg)));
   }
 

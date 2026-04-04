@@ -5,6 +5,7 @@ import { isLoaded, uninstallPlist, installPlist } from "../lib/scheduler.js";
 import { formatDuration, formatRelativeTime, formatSchedule, formatStatus } from "../utils/format.js";
 import { readLogFile } from "../lib/executor.js";
 import { Banner } from "../components/Banner.js";
+import { NotifySettings } from "../components/NotifySettings.js";
 import type { Task, Execution } from "../lib/schema.js";
 
 const VERSION = "0.1.0";
@@ -131,6 +132,7 @@ function HelpBar() {
         <Text bold color="white">space</Text> toggle{"  "}
         <Text bold color="white">R</Text> run now{"  "}
         <Text bold color="white">l</Text> logs{"  "}
+        <Text bold color="white">n</Text> notify{"  "}
         <Text bold color="white">q</Text> quit
       </Text>
     </Box>
@@ -139,6 +141,7 @@ function HelpBar() {
 
 export function Dashboard() {
   const { exit } = useApp();
+  const [view, setView] = useState<"tasks" | "notify">("tasks");
   const [tasks, setTasks] = useState<Task[]>(listTasks());
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [message, setMessage] = useState("");
@@ -162,6 +165,9 @@ export function Dashboard() {
   const executions = selectedTask ? getTaskExecutions(selectedTask.id, 5) : [];
 
   useInput((input, key) => {
+    // Notify view handles its own input
+    if (view === "notify") return;
+
     // Clear message on any input
     if (message && !confirmDelete) setMessage("");
 
@@ -221,6 +227,11 @@ export function Dashboard() {
       setMessage(`Run in another terminal: reveille run ${selectedTask.id}`);
     }
 
+    if (input === "n") {
+      setView("notify");
+      return;
+    }
+
     if (input === "l" && selectedTask) {
       const lastExec = executions[0];
       if (lastExec?.stdoutPath) {
@@ -237,60 +248,66 @@ export function Dashboard() {
     <Box flexDirection="column">
       <Header />
 
-      {tasks.length === 0 ? (
-        <Box paddingX={2} marginTop={1}>
-          <Text color="gray">
-            No tasks. Press <Text bold color="white">a</Text> to add one, or run{" "}
-            <Text bold color="cyan">reveille add</Text>.
-          </Text>
-        </Box>
+      {view === "notify" ? (
+        <NotifySettings onBack={() => setView("tasks")} />
       ) : (
         <>
-          <Box flexDirection="column" marginTop={1} paddingX={1}>
-            <Box>
-              <Text>{"  "}</Text>
-              <Box width={10}>
-                <Text bold color="gray">ID</Text>
-              </Box>
-              <Box width={18}>
-                <Text bold color="gray">NAME</Text>
-              </Box>
-              <Box width={8}>
-                <Text bold color="gray">AGENT</Text>
-              </Box>
-              <Box width={22}>
-                <Text bold color="gray">SCHEDULE</Text>
-              </Box>
-              <Box width={12}>
-                <Text bold color="gray">STATUS</Text>
-              </Box>
-              <Box>
-                <Text bold color="gray">LAST RUN</Text>
-              </Box>
+          {tasks.length === 0 ? (
+            <Box paddingX={2} marginTop={1}>
+              <Text color="gray">
+                No tasks. Press <Text bold color="white">a</Text> to add one, or run{" "}
+                <Text bold color="cyan">reveille add</Text>.
+              </Text>
             </Box>
-            {tasks.map((task, i) => (
-              <TaskRow
-                key={task.id}
-                task={task}
-                selected={i === selectedIndex}
-                lastExec={getTaskExecutions(task.id, 1)[0]}
-              />
-            ))}
-          </Box>
+          ) : (
+            <>
+              <Box flexDirection="column" marginTop={1} paddingX={1}>
+                <Box>
+                  <Text>{"  "}</Text>
+                  <Box width={10}>
+                    <Text bold color="gray">ID</Text>
+                  </Box>
+                  <Box width={18}>
+                    <Text bold color="gray">NAME</Text>
+                  </Box>
+                  <Box width={8}>
+                    <Text bold color="gray">AGENT</Text>
+                  </Box>
+                  <Box width={22}>
+                    <Text bold color="gray">SCHEDULE</Text>
+                  </Box>
+                  <Box width={12}>
+                    <Text bold color="gray">STATUS</Text>
+                  </Box>
+                  <Box>
+                    <Text bold color="gray">LAST RUN</Text>
+                  </Box>
+                </Box>
+                {tasks.map((task, i) => (
+                  <TaskRow
+                    key={task.id}
+                    task={task}
+                    selected={i === selectedIndex}
+                    lastExec={getTaskExecutions(task.id, 1)[0]}
+                  />
+                ))}
+              </Box>
 
-          {selectedTask && (
-            <DetailPanel task={selectedTask} executions={executions} />
+              {selectedTask && (
+                <DetailPanel task={selectedTask} executions={executions} />
+              )}
+            </>
           )}
+
+          {message && (
+            <Box paddingX={2} marginTop={1}>
+              <Text color="yellow">{message}</Text>
+            </Box>
+          )}
+
+          <HelpBar />
         </>
       )}
-
-      {message && (
-        <Box paddingX={2} marginTop={1}>
-          <Text color="yellow">{message}</Text>
-        </Box>
-      )}
-
-      <HelpBar />
     </Box>
   );
 }
@@ -310,14 +327,14 @@ export default async function dashboard(_args: string[]) {
     return;
   }
 
-  exitAction = "quit" as ExitAction;
+  exitAction = "quit";
 
   const { waitUntilExit } = render(<Dashboard />);
   await waitUntilExit();
 
   restoreTerminal();
 
-  if ((exitAction as ExitAction) === "add") {
+  if (exitAction === "add") {
     await new Promise((r) => setTimeout(r, 50));
     const addCmd = await import("./add.js");
     await addCmd.default([]);
