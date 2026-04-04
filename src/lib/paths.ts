@@ -1,6 +1,7 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, existsSync } from "node:fs";
+import { execSync } from "node:child_process";
 
 function getHome(): string {
   return process.env.REVEILLE_HOME ?? homedir();
@@ -42,5 +43,22 @@ export function getPlistPath(taskId: string): string {
 }
 
 export function getBinPath(): string {
-  return process.argv[1] ?? "reveille";
+  const argv1 = process.argv[1] ?? "";
+
+  // In dev mode (.ts source), resolve the installed binary for plist generation
+  if (argv1.endsWith(".ts")) {
+    try {
+      const resolved = execSync("which reveille", {
+        encoding: "utf-8",
+        timeout: 3000,
+      }).trim();
+      if (resolved && existsSync(resolved)) {
+        return resolved;
+      }
+    } catch {
+      // not installed globally
+    }
+  }
+
+  return argv1 || "reveille";
 }
