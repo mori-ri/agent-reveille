@@ -59,6 +59,9 @@ function printHelp() {
     remove, rm <id>    Remove a task
     run <id>           Execute a task immediately
     logs [id]          View execution logs
+      -n, --lines <N>    Number of stdout preview lines (default: 3)
+      --stderr           Include stderr output
+      --full             Show full stdout instead of tail
     enable <id>        Enable task (load launchd plist)
     disable <id>       Disable task (unload launchd plist)
     dashboard          Open interactive TUI dashboard
