@@ -4,13 +4,15 @@ import TextInput from "ink-text-input";
 import SelectInput from "ink-select-input";
 import { getTask, updateTask } from "../lib/tasks.js";
 import { installPlist, uninstallPlist } from "../lib/scheduler.js";
+import { buildCommand, extractPrompt } from "../lib/agents.js";
 import type { Task, ScheduleType } from "../lib/schema.js";
 import cronstrue from "cronstrue";
 
-type Step = "name" | "command" | "workdir" | "schedule-type" | "schedule-value" | "confirm";
+type Step = "name" | "prompt" | "command" | "workdir" | "schedule-type" | "schedule-value" | "confirm";
 
 interface EditDraft {
   name: string;
+  prompt: string;
   command: string;
   workingDir: string;
   scheduleType: ScheduleType;
@@ -27,11 +29,24 @@ function validateInterval(value: string): boolean {
   return !isNaN(n) && n > 0;
 }
 
-function EditWizard({ task }: { task: Task }) {
+function resolvePrompt(task: Task): string {
+  if (task.prompt) return task.prompt;
+  if (task.agent !== "custom") {
+    const extracted = extractPrompt(task.agent, task.command);
+    if (extracted) return extracted;
+  }
+  return "";
+}
+
+export function EditWizard({ task }: { task: Task }) {
   const { exit } = useApp();
+  const isCustomAgent = task.agent === "custom";
+  const initialPrompt = resolvePrompt(task);
+
   const [step, setStep] = useState<Step>("name");
   const [draft, setDraft] = useState<EditDraft>({
     name: task.name,
+    prompt: initialPrompt,
     command: task.command,
     workingDir: task.workingDir,
     scheduleType: task.scheduleType,
@@ -51,12 +66,31 @@ function EditWizard({ task }: { task: Task }) {
     { label: "Manual only (run manually)", value: "manual" as ScheduleType },
   ];
 
+  // After name, go to prompt (for agent tasks) or command (for custom)
+  function afterName() {
+    if (isCustomAgent) {
+      setStep("command");
+    } else {
+      setStep("prompt");
+    }
+  }
+
   function handleConfirm() {
     try {
       const updates: Partial<Task> = {};
       if (draft.name !== task.name) updates.name = draft.name;
-      if (draft.command !== task.command) updates.command = draft.command;
       if (draft.workingDir !== task.workingDir) updates.workingDir = draft.workingDir;
+
+      // Handle prompt/command changes
+      if (isCustomAgent) {
+        if (draft.command !== task.command) updates.command = draft.command;
+      } else {
+        const oldPrompt = initialPrompt;
+        if (draft.prompt !== oldPrompt) {
+          updates.prompt = draft.prompt;
+          updates.command = buildCommand(task.agent, draft.prompt);
+        }
+      }
 
       const scheduleChanged = draft.scheduleType !== task.scheduleType ||
         (draft.scheduleType === "cron" && draft.scheduleValue !== task.scheduleCron) ||
@@ -97,6 +131,12 @@ function EditWizard({ task }: { task: Task }) {
     );
   }
 
+  const displayCommand = isCustomAgent
+    ? draft.command
+    : draft.prompt
+      ? buildCommand(task.agent, draft.prompt)
+      : task.command;
+
   return (
     <Box flexDirection="column" paddingX={1}>
       <Text bold color="cyan">
@@ -113,9 +153,27 @@ function EditWizard({ task }: { task: Task }) {
             value={draft.name}
             onChange={(v) => setDraft({ ...draft, name: v })}
             onSubmit={(v) => {
-              if (v.trim()) setStep("command");
+              if (v.trim()) afterName();
             }}
           />
+        </Box>
+      )}
+
+      {step === "prompt" && (
+        <Box flexDirection="column">
+          <Text>Prompt for {task.agent}:</Text>
+          <TextInput
+            value={draft.prompt}
+            onChange={(v) => setDraft({ ...draft, prompt: v })}
+            onSubmit={(v) => {
+              if (v.trim()) setStep("workdir");
+            }}
+          />
+          {draft.prompt && (
+            <Text color="gray">
+              → {buildCommand(task.agent, draft.prompt)}
+            </Text>
+          )}
         </Box>
       )}
 
@@ -194,7 +252,9 @@ function EditWizard({ task }: { task: Task }) {
         <Box flexDirection="column">
           <Text bold>Summary:</Text>
           <Text>  Name:      {draft.name}</Text>
-          <Text>  Command:   {draft.command}</Text>
+          {!isCustomAgent && <Text>  Agent:     {task.agent}</Text>}
+          {!isCustomAgent && <Text>  Prompt:    {draft.prompt}</Text>}
+          <Text>  Command:   {displayCommand}</Text>
           <Text>  Directory: {draft.workingDir}</Text>
           <Text>
             {"  Schedule:  "}
@@ -220,10 +280,26 @@ function ConfirmInput({ onConfirm }: { onConfirm: () => void }) {
   return null;
 }
 
+function printTaskSummary(task: Task): void {
+  console.log(`  Name:      ${task.name}`);
+  if (task.prompt) {
+    console.log(`  Prompt:    ${task.prompt}`);
+  }
+  console.log(`  Command:   ${task.command}`);
+  console.log(`  Directory: ${task.workingDir}`);
+  if (task.scheduleType === "cron" && task.scheduleCron) {
+    console.log(`  Schedule:  cron ${task.scheduleCron}`);
+  } else if (task.scheduleType === "interval" && task.scheduleIntervalSeconds) {
+    console.log(`  Schedule:  every ${task.scheduleIntervalSeconds}s`);
+  } else {
+    console.log(`  Schedule:  manual`);
+  }
+}
+
 export default async function edit(args: string[]) {
   const id = args[0];
   if (!id) {
-    console.error("Usage: reveille edit <task-id> [--name NAME] [--cmd CMD] [--cron EXPR] [--interval SECS] [--dir PATH]");
+    console.error("Usage: reveille edit <task-id> [--name NAME] [--prompt TEXT] [--cmd CMD] [--cron EXPR] [--interval SECS] [--dir PATH]");
     process.exit(1);
   }
 
@@ -236,12 +312,13 @@ export default async function edit(args: string[]) {
   // Parse flags for non-interactive mode
   const flagArgs = args.slice(1);
   const nameIdx = flagArgs.indexOf("--name");
+  const promptIdx = flagArgs.indexOf("--prompt");
   const cmdIdx = flagArgs.indexOf("--cmd");
   const cronIdx = flagArgs.indexOf("--cron");
   const intervalIdx = flagArgs.indexOf("--interval");
   const dirIdx = flagArgs.indexOf("--dir");
 
-  const hasFlags = nameIdx !== -1 || cmdIdx !== -1 || cronIdx !== -1 || intervalIdx !== -1 || dirIdx !== -1;
+  const hasFlags = nameIdx !== -1 || promptIdx !== -1 || cmdIdx !== -1 || cronIdx !== -1 || intervalIdx !== -1 || dirIdx !== -1;
 
   if (hasFlags) {
     // Non-interactive mode
@@ -250,6 +327,13 @@ export default async function edit(args: string[]) {
 
     if (nameIdx !== -1) {
       updates.name = flagArgs[nameIdx + 1];
+    }
+    if (promptIdx !== -1) {
+      const newPrompt = flagArgs[promptIdx + 1];
+      updates.prompt = newPrompt;
+      if (task.agent !== "custom") {
+        updates.command = buildCommand(task.agent, newPrompt);
+      }
     }
     if (cmdIdx !== -1) {
       updates.command = flagArgs[cmdIdx + 1];
@@ -290,31 +374,20 @@ export default async function edit(args: string[]) {
 
     // Print confirmation
     console.log(`Task updated: ${updated.name} (${updated.id})`);
-    console.log(`  Name:      ${updated.name}`);
-    console.log(`  Command:   ${updated.command}`);
-    console.log(`  Directory: ${updated.workingDir}`);
-    if (updated.scheduleType === "cron" && updated.scheduleCron) {
-      console.log(`  Schedule:  cron ${updated.scheduleCron}`);
-    } else if (updated.scheduleType === "interval" && updated.scheduleIntervalSeconds) {
-      console.log(`  Schedule:  every ${updated.scheduleIntervalSeconds}s`);
-    } else {
-      console.log(`  Schedule:  manual`);
-    }
+    printTaskSummary(updated);
     return;
   }
 
-  // No flags - show current state
-  console.log(`No changes specified. Current task:`);
-  console.log(`  Name:      ${task.name}`);
-  console.log(`  Command:   ${task.command}`);
-  console.log(`  Directory: ${task.workingDir}`);
-  if (task.scheduleType === "cron" && task.scheduleCron) {
-    console.log(`  Schedule:  cron ${task.scheduleCron}`);
-  } else if (task.scheduleType === "interval" && task.scheduleIntervalSeconds) {
-    console.log(`  Schedule:  every ${task.scheduleIntervalSeconds}s`);
-  } else {
-    console.log(`  Schedule:  manual`);
+  // No flags — launch interactive wizard
+  if (!process.stdin.isTTY) {
+    // Fallback for non-TTY: show current state
+    console.log(`No changes specified. Current task:`);
+    printTaskSummary(task);
+    console.log("");
+    console.log("Use flags to update: --name, --prompt, --cmd, --cron, --interval, --dir");
+    return;
   }
-  console.log("");
-  console.log("Use flags to update: --name, --cmd, --cron, --interval, --dir");
+
+  const { waitUntilExit } = render(<EditWizard task={task} />);
+  await waitUntilExit();
 }

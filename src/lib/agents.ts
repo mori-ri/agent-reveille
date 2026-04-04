@@ -71,3 +71,28 @@ export function buildCommand(agentId: AgentId, prompt: string, customCommand?: s
   const agent = AGENTS[agentId];
   return agent.promptTemplate(prompt);
 }
+
+const PROMPT_FLAGS: Record<Exclude<AgentId, "custom">, string> = {
+  claude: "-p ",
+  codex: "-q ",
+  gemini: "-p ",
+  aider: "--message ",
+};
+
+export function extractPrompt(agentId: AgentId, command: string): string | null {
+  if (agentId === "custom") return null;
+  const flag = PROMPT_FLAGS[agentId];
+  if (!flag) return null;
+  const agent = AGENTS[agentId];
+  const prefix = `${agent.binary} ${flag}`;
+  const idx = command.indexOf(prefix);
+  if (idx === -1) return null;
+  const rest = command.slice(idx + prefix.length);
+  const match = rest.match(/^("(?:[^"\\]|\\.)*")/);
+  if (!match) return null;
+  try {
+    return JSON.parse(match[1]);
+  } catch {
+    return null;
+  }
+}

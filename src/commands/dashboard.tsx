@@ -9,8 +9,9 @@ import type { Task, Execution } from "../lib/schema.js";
 
 const VERSION = "0.1.0";
 
-type ExitAction = "quit" | "add";
+type ExitAction = "quit" | "add" | "edit";
 let exitAction: ExitAction = "quit";
+let editTargetId: string | null = null;
 
 function Header() {
   return (
@@ -127,6 +128,7 @@ function HelpBar() {
         {"  "}
         <Text bold color="white">j/k</Text> navigate{"  "}
         <Text bold color="white">a</Text> add{"  "}
+        <Text bold color="white">e</Text> edit{"  "}
         <Text bold color="white">r</Text> remove{"  "}
         <Text bold color="white">space</Text> toggle{"  "}
         <Text bold color="white">R</Text> run now{"  "}
@@ -195,6 +197,12 @@ export function Dashboard() {
 
     if (input === "a") {
       exitAction = "add";
+      exit();
+    }
+
+    if (input === "e" && selectedTask) {
+      exitAction = "edit";
+      editTargetId = selectedTask.id;
       exit();
     }
 
@@ -321,5 +329,11 @@ export default async function dashboard(_args: string[]) {
     await new Promise((r) => setTimeout(r, 50));
     const addCmd = await import("./add.js");
     await addCmd.default([]);
+  }
+
+  if ((exitAction as ExitAction) === "edit" && editTargetId) {
+    await new Promise((r) => setTimeout(r, 50));
+    const editCmd = await import("./edit.js");
+    await editCmd.default([editTargetId]);
   }
 }

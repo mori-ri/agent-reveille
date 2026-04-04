@@ -1,6 +1,6 @@
 ---
 name: ship
-description: "Commit staged changes and create a pull request on GitHub. Use this skill when the user says 'コミットして', 'PRを作って', 'プルリクエスト作成', 'ship it', 'commit and PR', 'push', 'マージしたい', or wants to commit their work and open a PR. Also trigger when the user says 'ship', 'リリースして', or asks to send changes upstream."
+description: "Commit staged changes and create a pull request on GitHub. Use this skill when the user says 'PRを作って', 'プルリクエスト作成', 'ship it', 'commit and PR', 'push', 'マージしたい', or wants to commit their work and open a PR. Also trigger when the user says 'ship', 'リリースして', or asks to send changes upstream."
 allowed-tools: Bash(git *), Bash(gh pr *), Bash(gh api *), Bash(npm run test:e2e *), Bash(npm test *), Bash(npx vitest *), Read, Glob, Grep, Edit, Agent
 ---
 

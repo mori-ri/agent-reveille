@@ -16,6 +16,7 @@ export const TaskSchema = z.object({
   id: z.string(),
   name: z.string().min(1),
   agent: AgentId,
+  prompt: z.string().optional(),
   command: z.string().min(1),
   workingDir: z.string().min(1),
   scheduleType: ScheduleType,
@@ -30,6 +31,7 @@ export type Task = z.infer<typeof TaskSchema>;
 export const CreateTaskInput = z.object({
   name: z.string().min(1),
   agent: AgentId,
+  prompt: z.string().optional(),
   command: z.string().min(1),
   workingDir: z.string().min(1),
   scheduleType: ScheduleType,

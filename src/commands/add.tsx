@@ -60,6 +60,7 @@ export function AddWizard() {
       const task = createTask({
         name: draft.name,
         agent: draft.agent,
+        prompt: draft.agent !== "custom" ? draft.prompt : undefined,
         command,
         workingDir: draft.workingDir,
         scheduleType: draft.scheduleType,
