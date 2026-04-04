@@ -100,6 +100,7 @@ async function render() {
       '<div class="meta">' +
         '<span>ID: ' + t.id + '</span>' +
         '<span>Agent: ' + t.agent + '</span>' +
+        '<span>Dir: ' + esc(t.workingDir) + '</span>' +
         '<span>Schedule: ' + (t.scheduleCron || t.scheduleType) + '</span>' +
         (lastExec ? '<span>Last: <span class="badge ' + lastExec.status + '">' + lastExec.status + '</span> ' + timeAgo(lastExec.finishedAt) + '</span>' : '') +
       '</div>' +
