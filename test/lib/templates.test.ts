@@ -4,7 +4,6 @@ import {
   getTemplate,
   listTemplates,
   templateToTaskInput,
-  type TaskTemplate,
 } from "../../src/lib/templates.js";
 
 describe("TEMPLATES", () => {

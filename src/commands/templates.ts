@@ -1,8 +1,9 @@
 import chalk from "chalk";
-import { listTemplates } from "../lib/templates.js";
 import cronstrue from "cronstrue";
 
-export default async function templates(_args: string[]) {
+import { listTemplates } from "../lib/templates.js";
+
+export default async function templates(_args: string[]): Promise<void> {
   const all = listTemplates();
 
   console.log(chalk.bold("\nAvailable templates:\n"));

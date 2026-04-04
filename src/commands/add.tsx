@@ -1,14 +1,14 @@
 import React, { useState } from "react";
-import { render, Box, Text, useInput, useApp } from "ink";
+import { render, Box, Text, useApp, useInput } from "ink";
 import TextInput from "ink-text-input";
 import SelectInput from "ink-select-input";
-import { createTask } from "../lib/tasks.js";
-import { installPlist } from "../lib/scheduler.js";
-import { detectInstalledAgents, buildCommand } from "../lib/agents.js";
-import { listTemplates, templateToTaskInput } from "../lib/templates.js";
-import type { AgentId, ScheduleType } from "../lib/schema.js";
-import type { TaskTemplate } from "../lib/templates.js";
 import cronstrue from "cronstrue";
+
+import { detectInstalledAgents, buildCommand } from "../lib/agents.js";
+import type { AgentId, ScheduleType } from "../lib/schema.js";
+import { installPlist } from "../lib/scheduler.js";
+import { createTask } from "../lib/tasks.js";
+import { getTemplate, listTemplates, templateToTaskInput } from "../lib/templates.js";
 
 type Step = "template" | "name" | "agent" | "prompt" | "workdir" | "schedule-type" | "schedule-value" | "confirm";
 
@@ -25,7 +25,6 @@ interface TaskDraft {
 export function AddWizard() {
   const { exit } = useApp();
   const [step, setStep] = useState<Step>("template");
-  const [selectedTemplate, setSelectedTemplate] = useState<TaskTemplate | null>(null);
   const [draft, setDraft] = useState<TaskDraft>({
     name: "",
     agent: "claude",
@@ -124,7 +123,6 @@ export function AddWizard() {
                 setStep("name");
               } else {
                 const tmpl = templates.find((t) => t.id === item.value)!;
-                setSelectedTemplate(tmpl);
                 setDraft({
                   ...draft,
                   name: tmpl.label,
@@ -275,7 +273,7 @@ function ConfirmInput({ onConfirm }: { onConfirm: () => void }) {
   return null;
 }
 
-export default async function add(args: string[]) {
+export default async function add(args: string[]): Promise<void> {
   // Non-interactive mode via flags
   const nameIdx = args.indexOf("--name");
   const agentIdx = args.indexOf("--agent");
@@ -287,7 +285,6 @@ export default async function add(args: string[]) {
   // Template-based non-interactive mode
   if (templateIdx !== -1) {
     const templateId = args[templateIdx + 1];
-    const { getTemplate, templateToTaskInput } = await import("../lib/templates.js");
     const tmpl = getTemplate(templateId);
     if (!tmpl) {
       console.error(`Unknown template: ${templateId}`);
