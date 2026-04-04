@@ -91,16 +91,16 @@ reveille
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `reveille add` | Create a new scheduled task (interactive wizard) |
-| `reveille list` | List all tasks with status and last run |
-| `reveille run <id>` | Execute a task immediately |
-| `reveille logs [id]` | View execution history |
-| `reveille enable <id>` | Enable scheduling (load launchd plist) |
-| `reveille disable <id>` | Disable scheduling (unload launchd plist) |
-| `reveille remove <id>` | Delete a task and its plist |
-| `reveille dashboard` | Open TUI dashboard (also the default) |
+| Command                 | Description                                      |
+| ----------------------- | ------------------------------------------------ |
+| `reveille add`          | Create a new scheduled task (interactive wizard) |
+| `reveille list`         | List all tasks with status and last run          |
+| `reveille run <id>`     | Execute a task immediately                       |
+| `reveille logs [id]`    | View execution history                           |
+| `reveille enable <id>`  | Enable scheduling (load launchd plist)           |
+| `reveille disable <id>` | Disable scheduling (unload launchd plist)        |
+| `reveille remove <id>`  | Delete a task and its plist                      |
+| `reveille dashboard`    | Open TUI dashboard (also the default)            |
 
 ## Dashboard
 
@@ -128,25 +128,25 @@ The interactive dashboard provides a full overview of your scheduled tasks.
 
 **Key bindings:**
 
-| Key | Action |
-|-----|--------|
-| `j` / `k` | Navigate up/down |
-| `a` | Add new task |
-| `r` | Remove selected task |
-| `Space` | Toggle enable/disable |
-| `R` | Run selected task |
-| `l` | View logs |
-| `q` | Quit |
+| Key       | Action                |
+| --------- | --------------------- |
+| `j` / `k` | Navigate up/down      |
+| `a`       | Add new task          |
+| `r`       | Remove selected task  |
+| `Space`   | Toggle enable/disable |
+| `R`       | Run selected task     |
+| `l`       | View logs             |
+| `q`       | Quit                  |
 
 ## Supported Agents
 
-| Agent | Binary | Non-interactive flag |
-|-------|--------|---------------------|
+| Agent       | Binary   | Non-interactive flag                         |
+| ----------- | -------- | -------------------------------------------- |
 | Claude Code | `claude` | `-p "prompt" --dangerously-skip-permissions` |
-| Codex CLI | `codex` | `-q "prompt"` |
-| Gemini CLI | `gemini` | `-p "prompt"` |
-| Aider | `aider` | `--message "prompt"` |
-| Custom | any | user-defined command |
+| Codex CLI   | `codex`  | `-q "prompt"`                                |
+| Gemini CLI  | `gemini` | `-p "prompt"`                                |
+| Aider       | `aider`  | `--message "prompt"`                         |
+| Custom      | any      | user-defined command                         |
 
 reveille auto-detects which agents are installed on your system.
 
@@ -190,12 +190,12 @@ Unlike raw crontab, launchd survives sleep/wake cycles and is the native macOS s
 
 ### Data Storage
 
-| Path | Contents |
-|------|----------|
-| `~/.config/reveille/tasks.json` | Task definitions |
-| `~/.config/reveille/executions.json` | Execution history |
-| `~/.local/share/reveille/logs/<task-id>/` | Full stdout/stderr log files |
-| `~/Library/LaunchAgents/com.reveille.task.*.plist` | Generated launchd plists |
+| Path                                               | Contents                     |
+| -------------------------------------------------- | ---------------------------- |
+| `~/.config/reveille/tasks.json`                    | Task definitions             |
+| `~/.config/reveille/executions.json`               | Execution history            |
+| `~/.local/share/reveille/logs/<task-id>/`          | Full stdout/stderr log files |
+| `~/Library/LaunchAgents/com.reveille.task.*.plist` | Generated launchd plists     |
 
 ## Examples
 
@@ -263,13 +263,13 @@ reveille add \
 
 ## Cron Expression Reference
 
-| Expression | Meaning |
-|-----------|---------|
-| `0 9 * * *` | Every day at 9:00 AM |
-| `*/30 * * * *` | Every 30 minutes |
-| `0 */2 * * *` | Every 2 hours |
-| `0 10 * * 1` | Every Monday at 10:00 AM |
-| `0 0 1 * *` | First day of every month at midnight |
+| Expression     | Meaning                              |
+| -------------- | ------------------------------------ |
+| `0 9 * * *`    | Every day at 9:00 AM                 |
+| `*/30 * * * *` | Every 30 minutes                     |
+| `0 */2 * * *`  | Every 2 hours                        |
+| `0 10 * * 1`   | Every Monday at 10:00 AM             |
+| `0 0 1 * *`    | First day of every month at midnight |
 
 ## Claude Code Integration
 
@@ -294,7 +294,7 @@ Claude Code will translate your request into the appropriate `reveille` command 
 ## Development
 
 ```bash
-git clone https://github.com/mori-ri/reveille.git
+git clone https://github.com/mori-ri/agent-reveille.git
 cd reveille
 npm install
 

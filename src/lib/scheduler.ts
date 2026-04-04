@@ -1,6 +1,5 @@
 import { writeFileSync, unlinkSync, existsSync, mkdirSync } from "node:fs";
 import { execSync } from "node:child_process";
-import { parseExpression } from "cron-parser";
 import { serializePlist } from "../utils/plist.js";
 import { getPlistPath, getPlistDir, getBinPath } from "./paths.js";
 import type { Task } from "./schema.js";
