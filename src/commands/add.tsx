@@ -89,6 +89,12 @@ export function AddWizard({ onComplete, onCancel }: AddWizardProps = {}) {
     { label: "Manual only (run manually)", value: "manual" as ScheduleType },
   ];
 
+  function formatScheduleSummary(): string {
+    if (draft.scheduleType === "manual") return "Manual";
+    if (draft.scheduleType === "interval") return `Every ${draft.scheduleCron} minutes`;
+    return cronstrue.toString(draft.scheduleCron);
+  }
+
   function handleConfirm() {
     try {
       const model = draft.model || undefined;
@@ -227,8 +233,12 @@ export function AddWizard({ onComplete, onCancel }: AddWizardProps = {}) {
           <SelectInput
             items={scheduleItems}
             onSelect={(item) => {
-              const resetCron = item.value === "interval" ? "" : "3 9 * * *";
-              const newDraft = { ...draft, scheduleType: item.value, scheduleCron: resetCron };
+              const defaultScheduleValue = item.value === "interval" ? "" : "3 9 * * *";
+              const newDraft = {
+                ...draft,
+                scheduleType: item.value,
+                scheduleCron: defaultScheduleValue,
+              };
               setDraft(newDraft);
               setStep(
                 getNextStep("schedule-type", {
@@ -253,11 +263,9 @@ export function AddWizard({ onComplete, onCancel }: AddWizardProps = {}) {
             placeholder={draft.scheduleType === "interval" ? "30" : undefined}
             onChange={(v) => setDraft({ ...draft, scheduleCron: v })}
             onSubmit={(v) => {
-              if (draft.scheduleType === "interval") {
-                if (isValidInterval(v)) setStep(getNextStep("schedule-value", stepContext));
-              } else {
-                if (v.trim()) setStep(getNextStep("schedule-value", stepContext));
-              }
+              const isValid =
+                draft.scheduleType === "interval" ? isValidInterval(v) : v.trim() !== "";
+              if (isValid) setStep(getNextStep("schedule-value", stepContext));
             }}
           />
           {draft.scheduleType === "cron" && draft.scheduleCron && (
@@ -313,11 +321,7 @@ export function AddWizard({ onComplete, onCancel }: AddWizardProps = {}) {
           <Text> Directory: {draft.workingDir}</Text>
           <Text>
             {"  Schedule:  "}
-            {draft.scheduleType === "manual"
-              ? "Manual"
-              : draft.scheduleType === "cron"
-                ? cronstrue.toString(draft.scheduleCron)
-                : `Every ${draft.scheduleCron} minutes`}
+            {formatScheduleSummary()}
           </Text>
           {draft.afterTask && (
             <Text>
