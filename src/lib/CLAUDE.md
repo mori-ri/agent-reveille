@@ -10,6 +10,7 @@ Pure logic only. No React, Ink, or chalk imports allowed in this directory.
 | `db.ts` | Persistence layer: read/write tasks (Markdown+frontmatter) and executions (JSON) |
 | `tasks.ts` | CRUD API — commands should call this, not db.ts directly |
 | `executor.ts` | Spawn agent processes, capture stdout/stderr to log files, handle timeout |
+| `chaining.ts` | Task chaining: run dependent tasks (`afterTask`) after successful execution |
 | `scheduler.ts` | Cron-to-launchd conversion, plist install/uninstall |
 | `paths.ts` | All filesystem paths centralized here. Uses REVEILLE_HOME for test isolation |
 | `agents.ts` | Agent presets (AGENTS record). Maps AgentId → command template |
