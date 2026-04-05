@@ -38,8 +38,6 @@ describe("update-notify", () => {
     });
 
     it("calls updateNotifier with correct options when version is set", async () => {
-      process.env.REVEILLE_SKIP_UPDATE_CHECK = undefined;
-
       const mockNotifier = { check: vi.fn(), notify: vi.fn() };
       const mockUpdateNotifier = vi.fn(() => mockNotifier);
 
