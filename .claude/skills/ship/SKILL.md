@@ -35,6 +35,8 @@ npm run typecheck && npm run lint && npm test
 
 All three must pass. If any fails, read the error, diagnose the issue, and fix it. Do not proceed to commit until all checks pass.
 
+**テスト結果を記録**: テストの実行結果（pass/fail 数、テストスイート数）を控えておく。後のPR作成時に記載する。
+
 #### b. Code simplifier
 
 Use the `code-simplifier` Agent (subagent_type: "code-simplifier") to review the changed code for reuse, quality, and efficiency. If it suggests fixes, apply them and re-run the E2E tests to make sure nothing broke.
@@ -95,6 +97,14 @@ gh pr create --title "<title>" --body "$(cat <<'EOF'
 - <bullet 1>
 - <bullet 2>
 
+## Test results
+- typecheck: ✅ pass
+- lint: ✅ pass
+- test: ✅ <N> passed (<M> suites)
+
+### Added E2E tests
+- `test/e2e/cli/<test-file>.test.ts` — <何をテストするか>
+
 ## Test plan
 - [ ] <verification step>
 
@@ -105,6 +115,8 @@ EOF
 
 - Keep the PR title short (under 70 chars), matching the commit title
 - Summary section: 1-3 bullet points of what changed and why
+- Test results section: quality gate の実行結果を記載する。pass/fail 数、テストスイート数を正確に転記すること
+- Added E2E tests section: この PR で追加・変更した E2E テストファイルとその概要を列挙する。E2E テストの追加がない場合はセクションごと省略する
 - Test plan section: how to verify the changes work
 - If a PR already exists for this branch, skip creation and tell the user
 

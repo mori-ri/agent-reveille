@@ -4,7 +4,14 @@ import { Banner } from "../components/Banner.js";
 import { readLogFile } from "../lib/executor.js";
 import { installPlist, isLoaded, uninstallPlist } from "../lib/scheduler.js";
 import type { Execution, Task } from "../lib/schema.js";
-import { deleteTask, getTaskExecutions, listTasks, updateTask } from "../lib/tasks.js";
+import {
+  deleteTask,
+  getDependentTasks,
+  getTask,
+  getTaskExecutions,
+  listTasks,
+  updateTask,
+} from "../lib/tasks.js";
 import {
   formatDuration,
   formatRelativeTime,
@@ -76,6 +83,8 @@ function TaskRow({
 
 function DetailPanel({ task, executions }: { task: Task; executions: Execution[] }) {
   const lastExec = executions[0];
+  const afterTaskInfo = task.afterTask ? getTask(task.afterTask) : null;
+  const dependents = getDependentTasks(task.id);
 
   return (
     <Box flexDirection="column" marginTop={1} paddingX={2}>
@@ -98,6 +107,18 @@ function DetailPanel({ task, executions }: { task: Task; executions: Execution[]
         <Text color="gray">Dir: </Text>
         <Text>{task.workingDir}</Text>
       </Text>
+      {task.afterTask && (
+        <Text>
+          <Text color="gray">After: </Text>
+          <Text>{afterTaskInfo ? afterTaskInfo.name : task.afterTask}</Text>
+        </Text>
+      )}
+      {dependents.length > 0 && (
+        <Text>
+          <Text color="gray">Triggers: </Text>
+          <Text>{dependents.map((d) => d.name).join(", ")}</Text>
+        </Text>
+      )}
       {lastExec && (
         <Box flexDirection="column" marginTop={1}>
           <Text bold>Last Execution:</Text>

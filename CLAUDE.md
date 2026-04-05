@@ -22,9 +22,10 @@ npm run lint:fix             # Auto-fix lint + format issues
 ```
 CLI: bin/reveille.ts → src/commands/<cmd> → src/lib/tasks.ts → src/lib/db.ts → filesystem
 launchd: plist → `reveille run <id>` → src/lib/executor.ts → spawn agent process
+chaining: run success → src/lib/chaining.ts → executeTask(dependent) → recurse
 ```
 
-launchd plists invoke `reveille run <id>`, NOT the agent directly. This enables automatic logging, timeout handling (30min default), and status tracking.
+launchd plists invoke `reveille run <id>`, NOT the agent directly. This enables automatic logging, timeout handling (30min default), status tracking, and task chaining.
 
 ### Key modules
 
@@ -32,6 +33,7 @@ launchd plists invoke `reveille run <id>`, NOT the agent directly. This enables 
 - `db.ts` — Persistence: Markdown+YAML frontmatter for tasks, JSON for executions. Atomic writes (tmp+rename)
 - `tasks.ts` — CRUD API (commands should call this, not db.ts directly)
 - `executor.ts` — Spawn agent processes, capture logs, handle timeouts
+- `chaining.ts` — Task chaining: trigger dependent tasks after successful execution
 - `scheduler.ts` — Cron-to-launchd conversion (`*/N` → StartInterval, others → StartCalendarInterval)
 - `agents.ts` — Agent presets (Claude, Codex, Gemini, Aider, Custom)
 - `paths.ts` — Centralized filesystem paths, uses REVEILLE_HOME for test isolation

@@ -6,7 +6,7 @@ import React, { useState } from "react";
 import { detectInstalledAgents, getAvailableModels } from "../lib/agents.js";
 import { installPlist } from "../lib/scheduler.js";
 import type { AgentId, ScheduleType } from "../lib/schema.js";
-import { createTask } from "../lib/tasks.js";
+import { createTask, listTasks } from "../lib/tasks.js";
 import {
   type Step,
   type StepContext,
@@ -22,6 +22,7 @@ interface TaskDraft {
   workingDir: string;
   scheduleType: ScheduleType;
   scheduleCron: string;
+  afterTask: string;
 }
 
 export interface AddWizardProps {
@@ -40,14 +41,17 @@ export function AddWizard({ onComplete, onCancel }: AddWizardProps = {}) {
     workingDir: process.cwd(),
     scheduleType: "cron",
     scheduleCron: "3 9 * * *",
+    afterTask: "",
   });
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
   const [taskId, setTaskId] = useState("");
 
+  const existingTasks = listTasks();
   const stepContext: StepContext = {
     agent: draft.agent,
     scheduleType: draft.scheduleType,
+    hasExistingTasks: existingTasks.length > 0,
   };
 
   useInput((_input, key) => {
@@ -82,6 +86,7 @@ export function AddWizard({ onComplete, onCancel }: AddWizardProps = {}) {
   function handleConfirm() {
     try {
       const model = draft.model || undefined;
+      const afterTask = draft.afterTask || undefined;
 
       const task = createTask({
         name: draft.name,
@@ -93,6 +98,7 @@ export function AddWizard({ onComplete, onCancel }: AddWizardProps = {}) {
         scheduleIntervalSeconds:
           draft.scheduleType === "interval" ? Number.parseInt(draft.scheduleCron) * 60 : undefined,
         model,
+        afterTask,
       });
 
       if (task.scheduleType !== "manual") {
@@ -254,6 +260,25 @@ export function AddWizard({ onComplete, onCancel }: AddWizardProps = {}) {
         </Box>
       )}
 
+      {step === "after-task" && (
+        <Box flexDirection="column">
+          <Text>Run after another task? (leave empty to skip):</Text>
+          {existingTasks.map((t) => (
+            <Text key={t.id} color="gray">
+              {"  "}
+              {t.id} — {t.name}
+            </Text>
+          ))}
+          <TextInput
+            value={draft.afterTask}
+            onChange={(v) => setDraft({ ...draft, afterTask: v })}
+            onSubmit={() => {
+              setStep(getNextStep("after-task", stepContext));
+            }}
+          />
+        </Box>
+      )}
+
       {step === "confirm" && (
         <Box flexDirection="column">
           <Text bold>Summary:</Text>
@@ -273,6 +298,12 @@ export function AddWizard({ onComplete, onCancel }: AddWizardProps = {}) {
                 ? cronstrue.toString(draft.scheduleCron)
                 : `Every ${draft.scheduleCron} minutes`}
           </Text>
+          {draft.afterTask && (
+            <Text>
+              {"  After:     "}
+              {draft.afterTask}
+            </Text>
+          )}
           <Text> </Text>
           <Text color="cyan">Press Enter to create, or Esc to go back.</Text>
           <ConfirmInput onConfirm={handleConfirm} />
@@ -297,6 +328,7 @@ export default async function add(args: string[]) {
   const cronIdx = args.indexOf("--cron");
   const dirIdx = args.indexOf("--dir");
   const modelIdx = args.indexOf("--model");
+  const afterIdx = args.indexOf("--after");
 
   if (nameIdx !== -1 && cmdIdx !== -1) {
     const name = args[nameIdx + 1];
@@ -305,6 +337,7 @@ export default async function add(args: string[]) {
     const cron = cronIdx !== -1 ? args[cronIdx + 1] : undefined;
     const dir = dirIdx !== -1 ? args[dirIdx + 1] : process.cwd();
     const model = modelIdx !== -1 ? args[modelIdx + 1] : undefined;
+    const afterTask = afterIdx !== -1 ? args[afterIdx + 1] : undefined;
 
     const task = createTask({
       name,
@@ -314,6 +347,7 @@ export default async function add(args: string[]) {
       scheduleType: cron ? "cron" : "manual",
       scheduleCron: cron,
       model,
+      afterTask,
     });
 
     if (task.scheduleType !== "manual") {

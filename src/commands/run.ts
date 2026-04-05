@@ -1,3 +1,4 @@
+import { runDependentChain } from "../lib/chaining.js";
 import { executeTask } from "../lib/executor.js";
 import { getTask } from "../lib/tasks.js";
 import { formatDuration } from "../utils/format.js";
@@ -31,6 +32,7 @@ export default async function run(args: string[]) {
 
   if (execution.status === "success") {
     console.log(`✓ Completed in ${duration} (exit code: ${execution.exitCode})`);
+    await runDependentChain(id, execution.id);
   } else {
     console.log(`✗ ${execution.status} after ${duration} (exit code: ${execution.exitCode})`);
     process.exit(1);
