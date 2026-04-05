@@ -1,5 +1,5 @@
-import { getTask, updateTask } from "../lib/tasks.js";
 import { uninstallPlist } from "../lib/scheduler.js";
+import { getTask, updateTask } from "../lib/tasks.js";
 
 export default async function disable(args: string[]) {
   const id = args[0];

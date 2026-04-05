@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { type TestEnv, createTestEnv } from "../../helpers/setup.js";
 import { runCLI } from "../helpers/cli.js";
-import { createTestEnv, type TestEnv } from "../../helpers/setup.js";
 
 describe("CLI lifecycle", () => {
   let env: TestEnv;
@@ -40,7 +40,7 @@ describe("CLI lifecycle", () => {
     // Extract task ID from output: "Task created: Lifecycle Test (XXXXXXXX)"
     const idMatch = addResult.stdout.match(/\(([a-zA-Z0-9_-]+)\)/);
     expect(idMatch).not.toBeNull();
-    const taskId = idMatch![1];
+    const taskId = idMatch?.[1];
 
     // List should show the task
     const listResult = await runCLI(["list"], env.tmpDir);
@@ -70,17 +70,7 @@ describe("CLI lifecycle", () => {
 
   it("adds a task with cron schedule and writes plist", async () => {
     const result = await runCLI(
-      [
-        "add",
-        "--name",
-        "Cron Task",
-        "--cmd",
-        "echo cron",
-        "--cron",
-        "0 9 * * *",
-        "--dir",
-        "/tmp",
-      ],
+      ["add", "--name", "Cron Task", "--cmd", "echo cron", "--cron", "0 9 * * *", "--dir", "/tmp"],
       env.tmpDir,
     );
     expect(result.exitCode).toBe(0);

@@ -1,15 +1,7 @@
-type PlistValue =
-  | string
-  | number
-  | boolean
-  | PlistValue[]
-  | { [key: string]: PlistValue };
+type PlistValue = string | number | boolean | PlistValue[] | { [key: string]: PlistValue };
 
 function escapeXml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 function serializeValue(value: PlistValue, indent: number): string {
@@ -33,10 +25,7 @@ function serializeValue(value: PlistValue, indent: number): string {
   }
   if (typeof value === "object" && value !== null) {
     const entries = Object.entries(value)
-      .map(
-        ([k, v]) =>
-          `${pad}\t<key>${escapeXml(k)}</key>\n${serializeValue(v, indent + 1)}`
-      )
+      .map(([k, v]) => `${pad}\t<key>${escapeXml(k)}</key>\n${serializeValue(v, indent + 1)}`)
       .join("\n");
     return `${pad}<dict>\n${entries}\n${pad}</dict>`;
   }

@@ -1,7 +1,7 @@
+import { Box, Text, render } from "ink";
 import React from "react";
-import { render, Box, Text } from "ink";
-import { listTasks, getTaskExecutions } from "../lib/tasks.js";
 import { isLoaded } from "../lib/scheduler.js";
+import { getTaskExecutions, listTasks } from "../lib/tasks.js";
 import { formatRelativeTime, formatSchedule, formatStatus } from "../utils/format.js";
 
 export function TaskList() {
@@ -11,7 +11,9 @@ export function TaskList() {
     return (
       <Box paddingX={1} flexDirection="column">
         <Text color="gray">No tasks configured. Run </Text>
-        <Text bold color="cyan">reveille add</Text>
+        <Text bold color="cyan">
+          reveille add
+        </Text>
         <Text color="gray"> to create one.</Text>
       </Box>
     );
@@ -25,22 +27,34 @@ export function TaskList() {
       <Text> </Text>
       <Box>
         <Box width={10}>
-          <Text bold color="gray">ID</Text>
+          <Text bold color="gray">
+            ID
+          </Text>
         </Box>
         <Box width={20}>
-          <Text bold color="gray">NAME</Text>
+          <Text bold color="gray">
+            NAME
+          </Text>
         </Box>
         <Box width={16}>
-          <Text bold color="gray">AGENT</Text>
+          <Text bold color="gray">
+            AGENT
+          </Text>
         </Box>
         <Box width={30}>
-          <Text bold color="gray">SCHEDULE</Text>
+          <Text bold color="gray">
+            SCHEDULE
+          </Text>
         </Box>
         <Box width={12}>
-          <Text bold color="gray">STATUS</Text>
+          <Text bold color="gray">
+            STATUS
+          </Text>
         </Box>
         <Box>
-          <Text bold color="gray">LAST RUN</Text>
+          <Text bold color="gray">
+            LAST RUN
+          </Text>
         </Box>
       </Box>
       <Text color="gray">{"─".repeat(100)}</Text>
@@ -73,9 +87,7 @@ export function TaskList() {
               <Text>{formatStatus(status)}</Text>
             </Box>
             <Box>
-              <Text color="gray">
-                {lastRun ? formatRelativeTime(lastRun.startedAt) : "never"}
-              </Text>
+              <Text color="gray">{lastRun ? formatRelativeTime(lastRun.startedAt) : "never"}</Text>
             </Box>
           </Box>
         );

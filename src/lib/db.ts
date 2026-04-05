@@ -1,31 +1,29 @@
 import {
-  readFileSync,
-  writeFileSync,
-  renameSync,
-  readdirSync,
-  unlinkSync,
   existsSync,
+  readFileSync,
+  readdirSync,
+  renameSync,
+  unlinkSync,
+  writeFileSync,
 } from "node:fs";
 import matter from "gray-matter";
 import {
-  getTasksDir,
-  getTaskFilePath,
   getExecutionsDir,
-  getTaskExecutionsFilePath,
-  getTasksFilePath,
   getExecutionsFilePath,
+  getTaskExecutionsFilePath,
+  getTaskFilePath,
+  getTasksDir,
+  getTasksFilePath,
 } from "./paths.js";
 import { TaskSchema } from "./schema.js";
-import type { Task, Execution } from "./schema.js";
+import type { Execution, Task } from "./schema.js";
 
 // --- Task serialization ---
 
 function serializeTask(task: Task): string {
   const { id, command, ...meta } = task;
   // Strip undefined values — js-yaml cannot serialize them
-  const cleaned = Object.fromEntries(
-    Object.entries(meta).filter(([, v]) => v !== undefined),
-  );
+  const cleaned = Object.fromEntries(Object.entries(meta).filter(([, v]) => v !== undefined));
   return matter.stringify(command, cleaned);
 }
 
@@ -70,7 +68,7 @@ export function loadTasks(): Task[] {
 
 export function saveTask(task: Task): void {
   const filePath = getTaskFilePath(task.id);
-  const tmpPath = filePath + ".tmp";
+  const tmpPath = `${filePath}.tmp`;
   writeFileSync(tmpPath, serializeTask(task), "utf-8");
   renameSync(tmpPath, filePath);
 }
@@ -94,7 +92,7 @@ function readJson<T>(filePath: string, fallback: T): T {
 }
 
 function writeJson<T>(filePath: string, data: T): void {
-  const tmpPath = filePath + ".tmp";
+  const tmpPath = `${filePath}.tmp`;
   writeFileSync(tmpPath, JSON.stringify(data, null, 2), "utf-8");
   renameSync(tmpPath, filePath);
 }
@@ -188,9 +186,9 @@ export function migrateIfNeeded(): void {
     for (const [taskId, execs] of grouped) {
       saveTaskExecutions(taskId, execs);
     }
-    renameSync(oldExecsPath, oldExecsPath + ".bak");
+    renameSync(oldExecsPath, `${oldExecsPath}.bak`);
   }
 
   // Rename old tasks file
-  renameSync(oldTasksPath, oldTasksPath + ".bak");
+  renameSync(oldTasksPath, `${oldTasksPath}.bak`);
 }

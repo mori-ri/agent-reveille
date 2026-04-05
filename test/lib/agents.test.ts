@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { buildCommand, getAvailableModels, AGENTS } from "../../src/lib/agents.js";
+import { describe, expect, it } from "vitest";
+import { AGENTS, buildCommand, getAvailableModels } from "../../src/lib/agents.js";
 
 describe("buildCommand", () => {
   it("should build claude command without model", () => {

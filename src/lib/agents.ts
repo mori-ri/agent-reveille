@@ -74,7 +74,12 @@ export function getAgent(id: AgentId): AgentPreset | null {
   return AGENTS[id] ?? null;
 }
 
-export function buildCommand(agentId: AgentId, prompt: string, customCommand?: string, model?: string): string {
+export function buildCommand(
+  agentId: AgentId,
+  prompt: string,
+  customCommand?: string,
+  model?: string,
+): string {
   if (agentId === "custom") {
     return customCommand ?? prompt;
   }

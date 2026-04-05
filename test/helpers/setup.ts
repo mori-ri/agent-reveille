@@ -1,6 +1,6 @@
-import { mkdtempSync, mkdirSync, rmSync } from "node:fs";
-import { join } from "node:path";
+import { mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { resetMigrationState } from "../../src/lib/db.js";
 
 export interface TestEnv {
@@ -30,12 +30,12 @@ export function createTestEnv(): TestEnv {
     cleanup() {
       // Restore environment
       if (prevHome === undefined) {
-        delete process.env.REVEILLE_HOME;
+        process.env.REVEILLE_HOME = undefined;
       } else {
         process.env.REVEILLE_HOME = prevHome;
       }
       if (prevSkip === undefined) {
-        delete process.env.REVEILLE_SKIP_LAUNCHCTL;
+        process.env.REVEILLE_SKIP_LAUNCHCTL = undefined;
       } else {
         process.env.REVEILLE_SKIP_LAUNCHCTL = prevSkip;
       }

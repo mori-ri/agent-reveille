@@ -1,20 +1,25 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { createTestEnv, type TestEnv } from "../helpers/setup.js";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
-  loadTask,
-  loadTasks,
-  saveTask,
-  deleteTaskFile,
-  loadTaskExecutions,
-  saveTaskExecutions,
-  loadAllExecutions,
   deleteTaskExecutions,
+  deleteTaskFile,
+  loadAllExecutions,
+  loadTask,
+  loadTaskExecutions,
+  loadTasks,
   migrateIfNeeded,
+  saveTask,
+  saveTaskExecutions,
 } from "../../src/lib/db.js";
-import { getTasksDir, getTaskFilePath, getTasksFilePath, getExecutionsFilePath } from "../../src/lib/paths.js";
-import type { Task, Execution } from "../../src/lib/schema.js";
+import {
+  getExecutionsFilePath,
+  getTaskFilePath,
+  getTasksDir,
+  getTasksFilePath,
+} from "../../src/lib/paths.js";
+import type { Execution, Task } from "../../src/lib/schema.js";
+import { type TestEnv, createTestEnv } from "../helpers/setup.js";
 
 function makeTask(overrides: Partial<Task> = {}): Task {
   return {
@@ -58,11 +63,11 @@ describe("db - task serialization", () => {
 
     const loaded = loadTask("test-123");
     expect(loaded).not.toBeNull();
-    expect(loaded!.id).toBe("test-123");
-    expect(loaded!.name).toBe("Test Task");
-    expect(loaded!.agent).toBe("claude");
-    expect(loaded!.command).toBe("review this code");
-    expect(loaded!.workingDir).toBe("/tmp");
+    expect(loaded?.id).toBe("test-123");
+    expect(loaded?.name).toBe("Test Task");
+    expect(loaded?.agent).toBe("claude");
+    expect(loaded?.command).toBe("review this code");
+    expect(loaded?.workingDir).toBe("/tmp");
   });
 
   it("should store command as markdown body, not in frontmatter", () => {
@@ -76,7 +81,7 @@ describe("db - task serialization", () => {
     // Frontmatter should NOT contain command
     const frontmatterMatch = raw.match(/^---\n([\s\S]*?)\n---/);
     expect(frontmatterMatch).not.toBeNull();
-    expect(frontmatterMatch![1]).not.toContain("command");
+    expect(frontmatterMatch?.[1]).not.toContain("command");
   });
 
   it("should derive id from filename, not store in frontmatter", () => {
@@ -85,7 +90,7 @@ describe("db - task serialization", () => {
 
     const raw = readFileSync(getTaskFilePath("test-123"), "utf-8");
     const frontmatterMatch = raw.match(/^---\n([\s\S]*?)\n---/);
-    expect(frontmatterMatch![1]).not.toContain("id:");
+    expect(frontmatterMatch?.[1]).not.toContain("id:");
   });
 
   it("should preserve multiline commands through roundtrip", () => {
@@ -101,7 +106,7 @@ describe("db - task serialization", () => {
     saveTask(task);
 
     const loaded = loadTask("test-123");
-    expect(loaded!.command).toBe(multilineCommand);
+    expect(loaded?.command).toBe(multilineCommand);
   });
 
   it("should preserve optional fields through roundtrip", () => {
@@ -114,10 +119,10 @@ describe("db - task serialization", () => {
     saveTask(task);
 
     const loaded = loadTask("test-123");
-    expect(loaded!.scheduleCron).toBe("0 9 * * *");
-    expect(loaded!.model).toBe("opus");
-    expect(loaded!.scheduleType).toBe("cron");
-    expect(loaded!.enabled).toBe(true);
+    expect(loaded?.scheduleCron).toBe("0 9 * * *");
+    expect(loaded?.model).toBe("opus");
+    expect(loaded?.scheduleType).toBe("cron");
+    expect(loaded?.enabled).toBe(true);
   });
 
   it("should return null for non-existent task", () => {
@@ -278,8 +283,8 @@ describe("db - migration", () => {
 
     const loaded = loadTask("migrate-1");
     expect(loaded).not.toBeNull();
-    expect(loaded!.name).toBe("Old Task");
-    expect(loaded!.command).toBe("echo hello");
+    expect(loaded?.name).toBe("Old Task");
+    expect(loaded?.command).toBe("echo hello");
   });
 
   it("should migrate executions.json to per-task files", () => {
@@ -316,8 +321,8 @@ describe("db - migration", () => {
     migrateIfNeeded();
 
     expect(existsSync(getTasksFilePath())).toBe(false);
-    expect(existsSync(getTasksFilePath() + ".bak")).toBe(true);
-    expect(existsSync(getExecutionsFilePath() + ".bak")).toBe(true);
+    expect(existsSync(`${getTasksFilePath()}.bak`)).toBe(true);
+    expect(existsSync(`${getExecutionsFilePath()}.bak`)).toBe(true);
   });
 
   it("should not migrate if tasks.json does not exist", () => {
@@ -368,6 +373,6 @@ describe("db - migration", () => {
 
     const loaded = loadTask("claude-task");
     expect(loaded).not.toBeNull();
-    expect(loaded!.command).toBe("review the code carefully");
+    expect(loaded?.command).toBe("review the code carefully");
   });
 });

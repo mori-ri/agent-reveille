@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { serializePlist } from "../../src/utils/plist.js";
 
 describe("serializePlist", () => {

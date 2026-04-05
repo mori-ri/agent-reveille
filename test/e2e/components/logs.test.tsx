@@ -1,9 +1,9 @@
-import React from "react";
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { render } from "ink-testing-library";
+import React from "react";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { ExecutionList } from "../../../src/commands/logs.js";
-import { createTestEnv, type TestEnv } from "../../helpers/setup.js";
 import type { Execution } from "../../../src/lib/schema.js";
+import { type TestEnv, createTestEnv } from "../../helpers/setup.js";
 
 describe("ExecutionList component", () => {
   let env: TestEnv;
@@ -57,9 +57,7 @@ describe("ExecutionList component", () => {
       },
     ];
 
-    const { lastFrame } = render(
-      <ExecutionList executions={executions} taskName="My Task" />,
-    );
+    const { lastFrame } = render(<ExecutionList executions={executions} taskName="My Task" />);
     expect(lastFrame()).toContain("My Task");
   });
 

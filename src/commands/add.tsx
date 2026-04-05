@@ -1,14 +1,22 @@
-import React, { useState } from "react";
-import { render, Box, Text, useInput, useApp } from "ink";
-import TextInput from "ink-text-input";
-import SelectInput from "ink-select-input";
-import { createTask } from "../lib/tasks.js";
-import { installPlist } from "../lib/scheduler.js";
-import { detectInstalledAgents, getAvailableModels } from "../lib/agents.js";
-import type { AgentId, ScheduleType } from "../lib/schema.js";
 import cronstrue from "cronstrue";
+import { Box, Text, render, useApp, useInput } from "ink";
+import SelectInput from "ink-select-input";
+import TextInput from "ink-text-input";
+import React, { useState } from "react";
+import { detectInstalledAgents, getAvailableModels } from "../lib/agents.js";
+import { installPlist } from "../lib/scheduler.js";
+import type { AgentId, ScheduleType } from "../lib/schema.js";
+import { createTask } from "../lib/tasks.js";
 
-type Step = "name" | "agent" | "model" | "prompt" | "workdir" | "schedule-type" | "schedule-value" | "confirm";
+type Step =
+  | "name"
+  | "agent"
+  | "model"
+  | "prompt"
+  | "workdir"
+  | "schedule-type"
+  | "schedule-value"
+  | "confirm";
 
 interface TaskDraft {
   name: string;
@@ -64,7 +72,7 @@ export function AddWizard() {
         scheduleType: draft.scheduleType,
         scheduleCron: draft.scheduleType === "cron" ? draft.scheduleCron : undefined,
         scheduleIntervalSeconds:
-          draft.scheduleType === "interval" ? parseInt(draft.scheduleCron) * 60 : undefined,
+          draft.scheduleType === "interval" ? Number.parseInt(draft.scheduleCron) * 60 : undefined,
         model,
       });
 
@@ -136,9 +144,7 @@ export function AddWizard() {
         <Box flexDirection="column">
           <Text>Model (leave empty for agent default):</Text>
           {getAvailableModels(draft.agent).length > 0 && (
-            <Text color="gray">
-              Suggestions: {getAvailableModels(draft.agent).join(", ")}
-            </Text>
+            <Text color="gray">Suggestions: {getAvailableModels(draft.agent).join(", ")}</Text>
           )}
           <TextInput
             value={draft.model}
@@ -152,9 +158,7 @@ export function AddWizard() {
 
       {step === "prompt" && (
         <Box flexDirection="column">
-          <Text>
-            {draft.agent === "custom" ? "Full command:" : "Prompt for the agent:"}
-          </Text>
+          <Text>{draft.agent === "custom" ? "Full command:" : "Prompt for the agent:"}</Text>
           <TextInput
             value={draft.prompt}
             onChange={(v) => setDraft({ ...draft, prompt: v })}
@@ -226,14 +230,14 @@ export function AddWizard() {
       {step === "confirm" && (
         <Box flexDirection="column">
           <Text bold>Summary:</Text>
-          <Text>  Name:      {draft.name}</Text>
-          <Text>  Agent:     {draft.agent}</Text>
-          {draft.model && <Text>  Model:     {draft.model}</Text>}
+          <Text> Name: {draft.name}</Text>
+          <Text> Agent: {draft.agent}</Text>
+          {draft.model && <Text> Model: {draft.model}</Text>}
           <Text>
             {"  Prompt:    "}
             {draft.prompt}
           </Text>
-          <Text>  Directory: {draft.workingDir}</Text>
+          <Text> Directory: {draft.workingDir}</Text>
           <Text>
             {"  Schedule:  "}
             {draft.scheduleType === "manual"
