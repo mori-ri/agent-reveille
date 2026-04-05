@@ -54,4 +54,5 @@ export default async function list(_args: string[]) {
 2. Create `src/commands/<name>.ts` (simple) or `<name>.tsx` (interactive)
 3. Add the command case to `bin/reveille.ts` switch statement
 4. If interactive: add component test in `test/e2e/components/<name>.test.tsx`
-5. Verify: `npm run typecheck && npm run lint && npm test`
+5. **Update `.claude/skills/reveille/SKILL.md`** — Available Commands セクションに新コマンドを追加
+6. Verify: `npm run typecheck && npm run lint && npm test`

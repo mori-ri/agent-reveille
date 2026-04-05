@@ -87,6 +87,7 @@ launchd plists invoke `reveille run <id>`, NOT the agent directly. This enables 
 - Do NOT call launchctl without checking REVEILLE_SKIP_LAUNCHCTL
 - Do NOT use inline snapshots — they break when formatting changes
 - Do NOT commit without running full quality gate (typecheck + lint + test)
+- Do NOT add a new command without updating `.claude/skills/reveille/SKILL.md`
 
 ## One-shot Agent Notes
 
