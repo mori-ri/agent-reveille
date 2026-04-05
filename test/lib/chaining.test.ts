@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createTask } from "../../src/lib/tasks.js";
+import { createTask, updateTask } from "../../src/lib/tasks.js";
 import { type TestEnv, createTestEnv } from "../helpers/setup.js";
 
 // Mock executor to avoid spawning real processes
@@ -187,5 +187,36 @@ describe("runDependentChain", () => {
     await runDependentChain(upstream.id, "exec-up");
 
     expect(mockedExecuteTask).toHaveBeenCalledTimes(2);
+  });
+
+  it("should trigger disabled (paused) dependent tasks", async () => {
+    const upstream = createTask({
+      name: "Upstream",
+      agent: "custom",
+      command: "echo",
+      workingDir: "/tmp",
+      scheduleType: "cron",
+      scheduleCron: "0 9 * * *",
+    });
+    const downstream = createTask({
+      name: "Downstream",
+      agent: "custom",
+      command: "echo",
+      workingDir: "/tmp",
+      scheduleType: "cron",
+      scheduleCron: "0 10 * * *",
+      afterTask: upstream.id,
+    });
+
+    // Disable the downstream task (simulates `reveille disable`)
+    updateTask(downstream.id, { enabled: false });
+
+    mockedExecuteTask.mockResolvedValueOnce(makeSuccessExecution(downstream.id, "exec-d"));
+
+    await runDependentChain(upstream.id, "exec-up");
+
+    // Disabled tasks should still be triggered via chain
+    expect(mockedExecuteTask).toHaveBeenCalledOnce();
+    expect(mockedExecuteTask).toHaveBeenCalledWith(downstream.id, "exec-up");
   });
 });

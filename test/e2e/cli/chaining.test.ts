@@ -110,4 +110,41 @@ describe("CLI task chaining", () => {
     expect(runResult.stdout).toContain("Chained: C");
     expect(runResult.stdout).toContain("C completed");
   });
+
+  it("triggers disabled (paused) chained task", async () => {
+    // Create A with cron schedule
+    const addA = await runCLI(
+      ["add", "--name", "TaskA", "--cmd", "echo done", "--dir", "/tmp", "--cron", "0 9 * * *"],
+      env.tmpDir,
+    );
+    const idA = addA.stdout.match(/\(([a-zA-Z0-9_-]+)\)/)?.[1];
+
+    // Create B with cron + after A
+    const addB = await runCLI(
+      [
+        "add",
+        "--name",
+        "TaskB",
+        "--cmd",
+        "echo chained",
+        "--dir",
+        "/tmp",
+        "--cron",
+        "0 10 * * *",
+        "--after",
+        idA,
+      ],
+      env.tmpDir,
+    );
+    const idB = addB.stdout.match(/\(([a-zA-Z0-9_-]+)\)/)?.[1];
+
+    // Disable B
+    await runCLI(["disable", idB], env.tmpDir);
+
+    // Run A — B should still be triggered via chain even though disabled
+    const runResult = await runCLI(["run", idA], env.tmpDir);
+    expect(runResult.exitCode).toBe(0);
+    expect(runResult.stdout).toContain("Chained: TaskB");
+    expect(runResult.stdout).toContain("TaskB completed");
+  });
 });
