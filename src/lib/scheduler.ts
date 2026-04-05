@@ -65,7 +65,7 @@ export function cronToIntervalSeconds(cron: string): number | null {
   return null;
 }
 
-function getUserPath(): string {
+export function getUserPath(): string {
   try {
     const shell = process.env.SHELL ?? "/bin/zsh";
     const path = execSync(`${shell} -l -c 'echo $PATH'`, {

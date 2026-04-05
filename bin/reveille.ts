@@ -31,6 +31,9 @@ async function main() {
     case "dashboard":
       await (await import("../src/commands/dashboard.js")).default(args.slice(1));
       break;
+    case "doctor":
+      await (await import("../src/commands/doctor.js")).default(args.slice(1));
+      break;
     case "help":
     case "--help":
     case "-h":
@@ -63,6 +66,7 @@ function printHelp() {
     logs [id]          View execution logs
     enable <id>        Enable task (load launchd plist)
     disable <id>       Disable task (unload launchd plist)
+    doctor             Diagnose common issues
     dashboard          Open interactive TUI dashboard
 
   Options:
