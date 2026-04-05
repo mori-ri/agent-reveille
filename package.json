@@ -1,6 +1,6 @@
 {
   "name": "agent-reveille",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "AI agent task scheduler with launchd integration",
   "type": "module",
   "bin": {
