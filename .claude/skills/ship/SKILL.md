@@ -27,13 +27,13 @@ Understand what's changed: modified files, new files, staged vs unstaged.
 
 Before committing, run these checks. Both must pass — if either fails, fix the issues before proceeding.
 
-#### a. tests
+#### a. typecheck, lint, and tests
 
 ```bash
-npm run test
+npm run typecheck && npm run lint && npm test
 ```
 
-If any test fails, read the failing test and the relevant source file, diagnose the issue, and fix it. Do not proceed to commit until all tests pass.
+All three must pass. If any fails, read the error, diagnose the issue, and fix it. Do not proceed to commit until all checks pass.
 
 #### b. Code simplifier
 

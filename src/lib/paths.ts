@@ -1,7 +1,7 @@
+import { execSync } from "node:child_process";
+import { existsSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { mkdirSync, existsSync } from "node:fs";
-import { execSync } from "node:child_process";
 
 function getHome(): string {
   return process.env.REVEILLE_HOME ?? homedir();

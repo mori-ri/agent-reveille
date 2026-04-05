@@ -1,7 +1,7 @@
-import { writeFileSync, unlinkSync, existsSync, mkdirSync } from "node:fs";
 import { execSync } from "node:child_process";
+import { existsSync, mkdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { serializePlist } from "../utils/plist.js";
-import { getPlistPath, getPlistDir, getBinPath } from "./paths.js";
+import { getBinPath, getPlistDir, getPlistPath } from "./paths.js";
 import type { Task } from "./schema.js";
 
 interface CalendarInterval {
@@ -24,19 +24,19 @@ export function cronToCalendarIntervals(cron: string): CalendarInterval[] {
   const interval: CalendarInterval = {};
 
   if (minute !== "*" && !minute.includes("/") && !minute.includes(",")) {
-    interval.Minute = parseInt(minute, 10);
+    interval.Minute = Number.parseInt(minute, 10);
   }
   if (hour !== "*" && !hour.includes("/") && !hour.includes(",")) {
-    interval.Hour = parseInt(hour, 10);
+    interval.Hour = Number.parseInt(hour, 10);
   }
   if (dayOfMonth !== "*" && !dayOfMonth.includes("/") && !dayOfMonth.includes(",")) {
-    interval.Day = parseInt(dayOfMonth, 10);
+    interval.Day = Number.parseInt(dayOfMonth, 10);
   }
   if (month !== "*" && !month.includes("/") && !month.includes(",")) {
-    interval.Month = parseInt(month, 10);
+    interval.Month = Number.parseInt(month, 10);
   }
   if (dayOfWeek !== "*" && !dayOfWeek.includes("/") && !dayOfWeek.includes(",")) {
-    interval.Weekday = parseInt(dayOfWeek, 10);
+    interval.Weekday = Number.parseInt(dayOfWeek, 10);
   }
 
   // For interval expressions like */5, use StartInterval instead
@@ -58,8 +58,8 @@ export function cronToIntervalSeconds(cron: string): number | null {
     month === "*" &&
     dayOfWeek === "*"
   ) {
-    const n = parseInt(minute.slice(2), 10);
-    if (!isNaN(n) && n > 0) return n * 60;
+    const n = Number.parseInt(minute.slice(2), 10);
+    if (!Number.isNaN(n) && n > 0) return n * 60;
   }
 
   return null;

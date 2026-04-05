@@ -1,12 +1,12 @@
 import { spawn } from "node:child_process";
 import { createWriteStream, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { loadTaskExecutions, saveTaskExecutions } from "./db.js";
-import { getTask } from "./tasks.js";
-import { getLogDir } from "./paths.js";
 import { generateId } from "../utils/id.js";
 import { buildCommand } from "./agents.js";
+import { loadTaskExecutions, saveTaskExecutions } from "./db.js";
+import { getLogDir } from "./paths.js";
 import type { Execution } from "./schema.js";
+import { getTask } from "./tasks.js";
 
 const DEFAULT_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -39,9 +39,10 @@ export async function executeTask(taskId: string): Promise<Execution> {
     const stderrStream = createWriteStream(stderrPath);
     let stdoutBuffer = "";
 
-    const executableCommand = task.agent === "custom"
-      ? task.command
-      : buildCommand(task.agent, task.command, undefined, task.model);
+    const executableCommand =
+      task.agent === "custom"
+        ? task.command
+        : buildCommand(task.agent, task.command, undefined, task.model);
 
     const proc = spawn("sh", ["-c", executableCommand], {
       cwd: task.workingDir,

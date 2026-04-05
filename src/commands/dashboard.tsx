@@ -1,11 +1,16 @@
+import { Box, Text, render, useApp, useInput } from "ink";
 import React, { useState, useEffect } from "react";
-import { render, Box, Text, useInput, useApp } from "ink";
-import { listTasks, getTaskExecutions, deleteTask, updateTask } from "../lib/tasks.js";
-import { isLoaded, uninstallPlist, installPlist } from "../lib/scheduler.js";
-import { formatDuration, formatRelativeTime, formatSchedule, formatStatus } from "../utils/format.js";
-import { readLogFile } from "../lib/executor.js";
 import { Banner } from "../components/Banner.js";
-import type { Task, Execution } from "../lib/schema.js";
+import { readLogFile } from "../lib/executor.js";
+import { installPlist, isLoaded, uninstallPlist } from "../lib/scheduler.js";
+import type { Execution, Task } from "../lib/schema.js";
+import { deleteTask, getTaskExecutions, listTasks, updateTask } from "../lib/tasks.js";
+import {
+  formatDuration,
+  formatRelativeTime,
+  formatSchedule,
+  formatStatus,
+} from "../utils/format.js";
 import { APP_VERSION } from "../utils/version.js";
 
 type ExitAction = "quit" | "add";
@@ -85,12 +90,12 @@ function DetailPanel({ task, executions }: { task: Task; executions: Execution[]
       </Text>
       {task.model && (
         <Text>
-          <Text color="gray">Model:   </Text>
+          <Text color="gray">Model: </Text>
           <Text>{task.model}</Text>
         </Text>
       )}
       <Text>
-        <Text color="gray">Dir:     </Text>
+        <Text color="gray">Dir: </Text>
         <Text>{task.workingDir}</Text>
       </Text>
       {lastExec && (
@@ -103,8 +108,7 @@ function DetailPanel({ task, executions }: { task: Task; executions: Execution[]
             Duration:{" "}
             {lastExec.finishedAt
               ? formatDuration(
-                  new Date(lastExec.finishedAt).getTime() -
-                    new Date(lastExec.startedAt).getTime()
+                  new Date(lastExec.finishedAt).getTime() - new Date(lastExec.startedAt).getTime(),
                 )
               : "running..."}
             <Text color="gray"> | </Text>
@@ -112,9 +116,7 @@ function DetailPanel({ task, executions }: { task: Task; executions: Execution[]
           </Text>
           {lastExec.stdoutTail && (
             <Box marginTop={1}>
-              <Text color="gray">
-                {lastExec.stdoutTail.split("\n").slice(-3).join("\n")}
-              </Text>
+              <Text color="gray">{lastExec.stdoutTail.split("\n").slice(-3).join("\n")}</Text>
             </Box>
           )}
         </Box>
@@ -133,13 +135,34 @@ function HelpBar() {
     <Box marginTop={1}>
       <Text color="gray">
         {"  "}
-        <Text bold color="white">j/k</Text> navigate{"  "}
-        <Text bold color="white">a</Text> add{"  "}
-        <Text bold color="white">r</Text> remove{"  "}
-        <Text bold color="white">space</Text> toggle{"  "}
-        <Text bold color="white">R</Text> run now{"  "}
-        <Text bold color="white">l</Text> logs{"  "}
-        <Text bold color="white">q</Text> quit
+        <Text bold color="white">
+          j/k
+        </Text>{" "}
+        navigate{"  "}
+        <Text bold color="white">
+          a
+        </Text>{" "}
+        add{"  "}
+        <Text bold color="white">
+          r
+        </Text>{" "}
+        remove{"  "}
+        <Text bold color="white">
+          space
+        </Text>{" "}
+        toggle{"  "}
+        <Text bold color="white">
+          R
+        </Text>{" "}
+        run now{"  "}
+        <Text bold color="white">
+          l
+        </Text>{" "}
+        logs{"  "}
+        <Text bold color="white">
+          q
+        </Text>{" "}
+        quit
       </Text>
     </Box>
   );
@@ -161,6 +184,7 @@ export function Dashboard() {
   };
 
   // Refresh tasks periodically
+  // biome-ignore lint/correctness/useExhaustiveDependencies: refreshTasks is stable within render scope
   useEffect(() => {
     const interval = setInterval(refreshTasks, 5000);
     return () => clearInterval(interval);
@@ -248,8 +272,15 @@ export function Dashboard() {
       {tasks.length === 0 ? (
         <Box paddingX={2} marginTop={1}>
           <Text color="gray">
-            No tasks. Press <Text bold color="white">a</Text> to add one, or run{" "}
-            <Text bold color="cyan">reveille add</Text>.
+            No tasks. Press{" "}
+            <Text bold color="white">
+              a
+            </Text>{" "}
+            to add one, or run{" "}
+            <Text bold color="cyan">
+              reveille add
+            </Text>
+            .
           </Text>
         </Box>
       ) : (
@@ -258,22 +289,34 @@ export function Dashboard() {
             <Box>
               <Text>{"  "}</Text>
               <Box width={10}>
-                <Text bold color="gray">ID</Text>
+                <Text bold color="gray">
+                  ID
+                </Text>
               </Box>
               <Box width={20}>
-                <Text bold color="gray">NAME</Text>
+                <Text bold color="gray">
+                  NAME
+                </Text>
               </Box>
               <Box width={20}>
-                <Text bold color="gray">AGENT</Text>
+                <Text bold color="gray">
+                  AGENT
+                </Text>
               </Box>
               <Box width={22}>
-                <Text bold color="gray">SCHEDULE</Text>
+                <Text bold color="gray">
+                  SCHEDULE
+                </Text>
               </Box>
               <Box width={12}>
-                <Text bold color="gray">STATUS</Text>
+                <Text bold color="gray">
+                  STATUS
+                </Text>
               </Box>
               <Box>
-                <Text bold color="gray">LAST RUN</Text>
+                <Text bold color="gray">
+                  LAST RUN
+                </Text>
               </Box>
             </Box>
             {tasks.map((task, i) => (
@@ -286,9 +329,7 @@ export function Dashboard() {
             ))}
           </Box>
 
-          {selectedTask && (
-            <DetailPanel task={selectedTask} executions={executions} />
-          )}
+          {selectedTask && <DetailPanel task={selectedTask} executions={executions} />}
         </>
       )}
 

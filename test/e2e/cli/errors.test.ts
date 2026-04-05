@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { type TestEnv, createTestEnv } from "../../helpers/setup.js";
 import { runCLI } from "../helpers/cli.js";
-import { createTestEnv, type TestEnv } from "../../helpers/setup.js";
 
 describe("CLI error handling", () => {
   let env: TestEnv;

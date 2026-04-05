@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { TaskSchema, CreateTaskInput } from "../../src/lib/schema.js";
+import { describe, expect, it } from "vitest";
+import { CreateTaskInput, TaskSchema } from "../../src/lib/schema.js";
 
 describe("TaskSchema model field", () => {
   const baseTask = {

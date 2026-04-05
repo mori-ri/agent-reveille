@@ -1,5 +1,5 @@
-import { getTask, updateTask } from "../lib/tasks.js";
 import { installPlist } from "../lib/scheduler.js";
+import { getTask, updateTask } from "../lib/tasks.js";
 
 export default async function enable(args: string[]) {
   const id = args[0];

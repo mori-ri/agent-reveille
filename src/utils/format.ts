@@ -1,6 +1,6 @@
-import { formatDistanceToNow } from "date-fns";
 import chalk from "chalk";
 import cronstrue from "cronstrue";
+import { formatDistanceToNow } from "date-fns";
 import type { Task } from "../lib/schema.js";
 
 export function formatDuration(ms: number): string {

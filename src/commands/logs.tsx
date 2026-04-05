@@ -1,10 +1,13 @@
+import { Box, Text, render } from "ink";
 import React from "react";
-import { render, Box, Text } from "ink";
-import { getTaskExecutions, getRecentExecutions, getTask } from "../lib/tasks.js";
-import { formatDuration, formatRelativeTime, formatStatus } from "../utils/format.js";
 import type { Execution } from "../lib/schema.js";
+import { getRecentExecutions, getTask, getTaskExecutions } from "../lib/tasks.js";
+import { formatDuration, formatRelativeTime, formatStatus } from "../utils/format.js";
 
-export function ExecutionList({ executions, taskName }: { executions: Execution[]; taskName?: string }) {
+export function ExecutionList({
+  executions,
+  taskName,
+}: { executions: Execution[]; taskName?: string }) {
   if (executions.length === 0) {
     return (
       <Box paddingX={1}>
@@ -20,12 +23,9 @@ export function ExecutionList({ executions, taskName }: { executions: Execution[
       </Text>
       <Text> </Text>
       {executions.map((exec) => {
-        const duration =
-          exec.finishedAt
-            ? formatDuration(
-                new Date(exec.finishedAt).getTime() - new Date(exec.startedAt).getTime()
-              )
-            : "running...";
+        const duration = exec.finishedAt
+          ? formatDuration(new Date(exec.finishedAt).getTime() - new Date(exec.startedAt).getTime())
+          : "running...";
 
         return (
           <Box key={exec.id} flexDirection="column" marginBottom={1}>
@@ -40,9 +40,7 @@ export function ExecutionList({ executions, taskName }: { executions: Execution[
             </Box>
             {exec.stdoutTail && (
               <Box marginLeft={2}>
-                <Text color="gray">
-                  {exec.stdoutTail.split("\n").slice(-3).join("\n")}
-                </Text>
+                <Text color="gray">{exec.stdoutTail.split("\n").slice(-3).join("\n")}</Text>
               </Box>
             )}
           </Box>
@@ -55,7 +53,7 @@ export function ExecutionList({ executions, taskName }: { executions: Execution[
 export default async function logs(args: string[]) {
   const id = args[0];
 
-  let instance;
+  let instance: ReturnType<typeof render> | undefined;
   if (id) {
     const task = getTask(id);
     if (!task) {

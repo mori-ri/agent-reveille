@@ -1,9 +1,9 @@
-import React from "react";
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { render } from "ink-testing-library";
+import React from "react";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { TaskList } from "../../../src/commands/list.js";
 import { createTask } from "../../../src/lib/tasks.js";
-import { createTestEnv, type TestEnv } from "../../helpers/setup.js";
+import { type TestEnv, createTestEnv } from "../../helpers/setup.js";
 
 describe("TaskList component", () => {
   let env: TestEnv;

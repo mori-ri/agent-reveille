@@ -25,7 +25,7 @@ export default async function run(args: string[]) {
   console.log("");
   const duration = execution.finishedAt
     ? formatDuration(
-        new Date(execution.finishedAt).getTime() - new Date(execution.startedAt).getTime()
+        new Date(execution.finishedAt).getTime() - new Date(execution.startedAt).getTime(),
       )
     : "?";
 

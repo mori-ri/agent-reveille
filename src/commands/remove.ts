@@ -1,5 +1,5 @@
-import { deleteTask, getTask } from "../lib/tasks.js";
 import { uninstallPlist } from "../lib/scheduler.js";
+import { deleteTask, getTask } from "../lib/tasks.js";
 
 export default async function remove(args: string[]) {
   const id = args[0];

@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { type TestEnv, createTestEnv } from "../../helpers/setup.js";
 import { runCLI } from "../helpers/cli.js";
-import { createTestEnv, type TestEnv } from "../../helpers/setup.js";
 
 describe("CLI task execution", () => {
   let env: TestEnv;
@@ -22,7 +22,7 @@ describe("CLI task execution", () => {
       env.tmpDir,
     );
     const idMatch = addResult.stdout.match(/\(([a-zA-Z0-9_-]+)\)/);
-    const taskId = idMatch![1];
+    const taskId = idMatch?.[1];
 
     // Run
     const runResult = await runCLI(["run", taskId], env.tmpDir);
@@ -37,7 +37,7 @@ describe("CLI task execution", () => {
       env.tmpDir,
     );
     const idMatch = addResult.stdout.match(/\(([a-zA-Z0-9_-]+)\)/);
-    const taskId = idMatch![1];
+    const taskId = idMatch?.[1];
 
     const runResult = await runCLI(["run", taskId], env.tmpDir);
     expect(runResult.exitCode).toBe(1);
@@ -51,7 +51,7 @@ describe("CLI task execution", () => {
       env.tmpDir,
     );
     const idMatch = addResult.stdout.match(/\(([a-zA-Z0-9_-]+)\)/);
-    const taskId = idMatch![1];
+    const taskId = idMatch?.[1];
 
     await runCLI(["run", taskId], env.tmpDir);
 

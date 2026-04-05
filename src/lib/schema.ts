@@ -1,12 +1,6 @@
 import { z } from "zod";
 
-export const AgentId = z.enum([
-  "claude",
-  "codex",
-  "gemini",
-  "aider",
-  "custom",
-]);
+export const AgentId = z.enum(["claude", "codex", "gemini", "aider", "custom"]);
 export type AgentId = z.infer<typeof AgentId>;
 
 export const ScheduleType = z.enum(["cron", "interval", "manual"]);
@@ -40,12 +34,7 @@ export const CreateTaskInput = z.object({
 });
 export type CreateTaskInput = z.infer<typeof CreateTaskInput>;
 
-export const ExecutionStatus = z.enum([
-  "running",
-  "success",
-  "failed",
-  "timeout",
-]);
+export const ExecutionStatus = z.enum(["running", "success", "failed", "timeout"]);
 export type ExecutionStatus = z.infer<typeof ExecutionStatus>;
 
 export const ExecutionSchema = z.object({
