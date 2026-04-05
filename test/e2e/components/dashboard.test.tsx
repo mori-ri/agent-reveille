@@ -22,11 +22,12 @@ describe("Dashboard component", () => {
     expect(frame).toContain("No tasks");
   });
 
-  it("displays help bar with keybindings", () => {
+  it("displays help bar with keybindings (no quit)", () => {
     const { lastFrame } = render(<Dashboard />);
     const frame = lastFrame()!;
     expect(frame).toContain("j/k");
-    expect(frame).toContain("quit");
+    expect(frame).toContain("logs");
+    expect(frame).not.toContain("quit");
   });
 
   it("displays task list when tasks exist", () => {

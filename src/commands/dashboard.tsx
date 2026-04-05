@@ -12,9 +12,9 @@ import {
   formatStatus,
 } from "../utils/format.js";
 import { APP_VERSION } from "../utils/version.js";
+import { AddWizard } from "./add.js";
 
-type ExitAction = "quit" | "add";
-let exitAction: ExitAction = "quit";
+type View = "dashboard" | "add";
 
 function Header() {
   return (
@@ -158,11 +158,7 @@ function HelpBar() {
         <Text bold color="white">
           l
         </Text>{" "}
-        logs{"  "}
-        <Text bold color="white">
-          q
-        </Text>{" "}
-        quit
+        logs
       </Text>
     </Box>
   );
@@ -170,6 +166,7 @@ function HelpBar() {
 
 export function Dashboard() {
   const { exit } = useApp();
+  const [view, setView] = useState<View>("dashboard");
   const [tasks, setTasks] = useState<Task[]>(listTasks());
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [message, setMessage] = useState("");
@@ -193,77 +190,90 @@ export function Dashboard() {
   const selectedTask = tasks[selectedIndex];
   const executions = selectedTask ? getTaskExecutions(selectedTask.id, 5) : [];
 
-  useInput((input, key) => {
-    // Clear message on any input
-    if (message && !confirmDelete) setMessage("");
+  useInput(
+    (input, key) => {
+      // Clear message on any input
+      if (message && !confirmDelete) setMessage("");
 
-    if (input === "q" || (key.ctrl && input === "c")) {
-      exitAction = "quit";
-      exit();
-      return;
-    }
+      if (key.ctrl && input === "c") {
+        exit();
+        return;
+      }
 
-    // Confirm delete flow
-    if (confirmDelete) {
-      if (input === "y" && selectedTask) {
-        uninstallPlist(selectedTask.id);
-        deleteTask(selectedTask.id);
-        setMessage(`Removed: ${selectedTask.name}`);
-        setConfirmDelete(false);
+      // Confirm delete flow
+      if (confirmDelete) {
+        if (input === "y" && selectedTask) {
+          uninstallPlist(selectedTask.id);
+          deleteTask(selectedTask.id);
+          setMessage(`Removed: ${selectedTask.name}`);
+          setConfirmDelete(false);
+          refreshTasks();
+        } else {
+          setMessage("Cancelled.");
+          setConfirmDelete(false);
+        }
+        return;
+      }
+
+      if (input === "j" || key.downArrow) {
+        setSelectedIndex((i) => Math.min(i + 1, tasks.length - 1));
+      }
+      if (input === "k" || key.upArrow) {
+        setSelectedIndex((i) => Math.max(i - 1, 0));
+      }
+
+      if (input === "a") {
+        setView("add");
+      }
+
+      if (input === "r" && selectedTask) {
+        setConfirmDelete(true);
+        setMessage(`Remove "${selectedTask.name}"? (y/n)`);
+      }
+
+      if (input === " " && selectedTask) {
+        const loaded = isLoaded(selectedTask.id);
+        if (loaded) {
+          uninstallPlist(selectedTask.id);
+          updateTask(selectedTask.id, { enabled: false });
+          setMessage(`Disabled: ${selectedTask.name}`);
+        } else {
+          installPlist(selectedTask);
+          updateTask(selectedTask.id, { enabled: true });
+          setMessage(`Enabled: ${selectedTask.name}`);
+        }
         refreshTasks();
-      } else {
-        setMessage("Cancelled.");
-        setConfirmDelete(false);
       }
-      return;
-    }
 
-    if (input === "j" || key.downArrow) {
-      setSelectedIndex((i) => Math.min(i + 1, tasks.length - 1));
-    }
-    if (input === "k" || key.upArrow) {
-      setSelectedIndex((i) => Math.max(i - 1, 0));
-    }
-
-    if (input === "a") {
-      exitAction = "add";
-      exit();
-    }
-
-    if (input === "r" && selectedTask) {
-      setConfirmDelete(true);
-      setMessage(`Remove "${selectedTask.name}"? (y/n)`);
-    }
-
-    if (input === " " && selectedTask) {
-      const loaded = isLoaded(selectedTask.id);
-      if (loaded) {
-        uninstallPlist(selectedTask.id);
-        updateTask(selectedTask.id, { enabled: false });
-        setMessage(`Disabled: ${selectedTask.name}`);
-      } else {
-        installPlist(selectedTask);
-        updateTask(selectedTask.id, { enabled: true });
-        setMessage(`Enabled: ${selectedTask.name}`);
+      if (input === "R" && selectedTask) {
+        setMessage(`Run in another terminal: reveille run ${selectedTask.id}`);
       }
-      refreshTasks();
-    }
 
-    if (input === "R" && selectedTask) {
-      setMessage(`Run in another terminal: reveille run ${selectedTask.id}`);
-    }
-
-    if (input === "l" && selectedTask) {
-      const lastExec = executions[0];
-      if (lastExec?.stdoutPath) {
-        const log = readLogFile(lastExec.stdoutPath);
-        const lines = log.split("\n").slice(-10).join("\n");
-        setMessage(`--- Log (last 10 lines) ---\n${lines}`);
-      } else {
-        setMessage("No logs available.");
+      if (input === "l" && selectedTask) {
+        const lastExec = executions[0];
+        if (lastExec?.stdoutPath) {
+          const log = readLogFile(lastExec.stdoutPath);
+          const lines = log.split("\n").slice(-10).join("\n");
+          setMessage(`--- Log (last 10 lines) ---\n${lines}`);
+        } else {
+          setMessage("No logs available.");
+        }
       }
-    }
-  });
+    },
+    { isActive: view === "dashboard" },
+  );
+
+  if (view === "add") {
+    return (
+      <AddWizard
+        onComplete={() => {
+          refreshTasks();
+          setView("dashboard");
+        }}
+        onCancel={() => setView("dashboard")}
+      />
+    );
+  }
 
   return (
     <Box flexDirection="column">
@@ -359,16 +369,8 @@ export default async function dashboard(_args: string[]) {
     return;
   }
 
-  exitAction = "quit" as ExitAction;
-
   const { waitUntilExit } = render(<Dashboard />);
   await waitUntilExit();
 
   restoreTerminal();
-
-  if ((exitAction as ExitAction) === "add") {
-    await new Promise((r) => setTimeout(r, 50));
-    const addCmd = await import("./add.js");
-    await addCmd.default([]);
-  }
 }
