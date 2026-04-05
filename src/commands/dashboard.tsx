@@ -6,9 +6,7 @@ import { formatDuration, formatRelativeTime, formatSchedule, formatStatus } from
 import { readLogFile } from "../lib/executor.js";
 import { Banner } from "../components/Banner.js";
 import type { Task, Execution } from "../lib/schema.js";
-
-declare const __APP_VERSION__: string;
-const VERSION = typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "dev";
+import { APP_VERSION } from "../utils/version.js";
 
 type ExitAction = "quit" | "add";
 let exitAction: ExitAction = "quit";
@@ -16,7 +14,7 @@ let exitAction: ExitAction = "quit";
 function Header() {
   return (
     <Box flexDirection="column">
-      <Banner version={VERSION} />
+      <Banner version={APP_VERSION} />
       <Text color="gray">{"─".repeat(70)}</Text>
     </Box>
   );
