@@ -1,4 +1,12 @@
-import { loadTasks, saveTasks, loadExecutions, saveExecutions } from "./db.js";
+import {
+  loadTask,
+  loadTasks as loadAllTasks,
+  saveTask,
+  deleteTaskFile,
+  loadTaskExecutions as loadExecs,
+  loadAllExecutions,
+  deleteTaskExecutions,
+} from "./db.js";
 import { generateId } from "../utils/id.js";
 import type { Task, CreateTaskInput, Execution } from "./schema.js";
 
@@ -11,55 +19,46 @@ export function createTask(input: CreateTaskInput): Task {
     createdAt: now,
     updatedAt: now,
   };
-  const tasks = loadTasks();
-  tasks.push(task);
-  saveTasks(tasks);
+  saveTask(task);
   return task;
 }
 
 export function getTask(id: string): Task | null {
-  const tasks = loadTasks();
-  return tasks.find((t) => t.id === id) ?? null;
+  return loadTask(id);
 }
 
 export function listTasks(): Task[] {
-  return loadTasks();
+  return loadAllTasks();
 }
 
 export function updateTask(id: string, updates: Partial<Omit<Task, "id" | "createdAt">>): Task {
-  const tasks = loadTasks();
-  const index = tasks.findIndex((t) => t.id === id);
-  if (index === -1) throw new Error(`Task not found: ${id}`);
-  tasks[index] = {
-    ...tasks[index],
+  const task = loadTask(id);
+  if (!task) throw new Error(`Task not found: ${id}`);
+  const updated: Task = {
+    ...task,
     ...updates,
     updatedAt: new Date().toISOString(),
   };
-  saveTasks(tasks);
-  return tasks[index];
+  saveTask(updated);
+  return updated;
 }
 
 export function deleteTask(id: string): void {
-  const tasks = loadTasks();
-  const filtered = tasks.filter((t) => t.id !== id);
-  if (filtered.length === tasks.length) throw new Error(`Task not found: ${id}`);
-  saveTasks(filtered);
-
-  // Also clean up executions for this task
-  const executions = loadExecutions();
-  saveExecutions(executions.filter((e) => e.taskId !== id));
+  const task = loadTask(id);
+  if (!task) throw new Error(`Task not found: ${id}`);
+  deleteTaskFile(id);
+  deleteTaskExecutions(id);
 }
 
 export function getTaskExecutions(taskId: string, limit = 20): Execution[] {
-  const executions = loadExecutions();
+  const executions = loadExecs(taskId);
   return executions
-    .filter((e) => e.taskId === taskId)
     .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
     .slice(0, limit);
 }
 
 export function getRecentExecutions(limit = 20): Execution[] {
-  const executions = loadExecutions();
+  const executions = loadAllExecutions();
   return executions
     .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
     .slice(0, limit);

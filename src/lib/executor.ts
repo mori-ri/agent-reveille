@@ -1,10 +1,11 @@
 import { spawn } from "node:child_process";
 import { createWriteStream, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { loadExecutions, saveExecutions } from "./db.js";
+import { loadTaskExecutions, saveTaskExecutions } from "./db.js";
 import { getTask } from "./tasks.js";
 import { getLogDir } from "./paths.js";
 import { generateId } from "../utils/id.js";
+import { buildCommand } from "./agents.js";
 import type { Execution } from "./schema.js";
 
 const DEFAULT_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
@@ -29,16 +30,20 @@ export async function executeTask(taskId: string): Promise<Execution> {
   };
 
   // Save initial execution record
-  const executions = loadExecutions();
+  const executions = loadTaskExecutions(taskId);
   executions.push(execution);
-  saveExecutions(executions);
+  saveTaskExecutions(taskId, executions);
 
   return new Promise((resolve) => {
     const stdoutStream = createWriteStream(stdoutPath);
     const stderrStream = createWriteStream(stderrPath);
     let stdoutBuffer = "";
 
-    const proc = spawn("sh", ["-c", task.command], {
+    const executableCommand = task.agent === "custom"
+      ? task.command
+      : buildCommand(task.agent, task.command, undefined, task.model);
+
+    const proc = spawn("sh", ["-c", executableCommand], {
       cwd: task.workingDir,
       env: {
         ...process.env,
@@ -89,12 +94,12 @@ export async function executeTask(taskId: string): Promise<Execution> {
       };
 
       // Update execution record
-      const allExecutions = loadExecutions();
+      const allExecutions = loadTaskExecutions(taskId);
       const index = allExecutions.findIndex((e) => e.id === executionId);
       if (index !== -1) {
         allExecutions[index] = finishedExecution;
       }
-      saveExecutions(allExecutions);
+      saveTaskExecutions(taskId, allExecutions);
 
       resolve(finishedExecution);
     });
@@ -112,12 +117,12 @@ export async function executeTask(taskId: string): Promise<Execution> {
         status: "failed",
       };
 
-      const allExecutions = loadExecutions();
+      const allExecutions = loadTaskExecutions(taskId);
       const index = allExecutions.findIndex((e) => e.id === executionId);
       if (index !== -1) {
         allExecutions[index] = failedExecution;
       }
-      saveExecutions(allExecutions);
+      saveTaskExecutions(taskId, allExecutions);
 
       resolve(failedExecution);
     });

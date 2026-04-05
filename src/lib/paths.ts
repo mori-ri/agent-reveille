@@ -26,10 +26,32 @@ export function getLogDir(taskId?: string): string {
   return dir;
 }
 
+export function getTasksDir(): string {
+  const dir = join(getConfigDir(), "tasks");
+  mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+export function getTaskFilePath(id: string): string {
+  return join(getTasksDir(), `${id}.md`);
+}
+
+export function getExecutionsDir(): string {
+  const dir = join(getConfigDir(), "executions");
+  mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+export function getTaskExecutionsFilePath(taskId: string): string {
+  return join(getExecutionsDir(), `${taskId}.json`);
+}
+
+/** @deprecated Used only for migration from old format */
 export function getTasksFilePath(): string {
   return join(getConfigDir(), "tasks.json");
 }
 
+/** @deprecated Used only for migration from old format */
 export function getExecutionsFilePath(): string {
   return join(getConfigDir(), "executions.json");
 }

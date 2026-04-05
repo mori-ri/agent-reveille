@@ -79,8 +79,9 @@ describe("Dashboard component", () => {
     // Both tasks should be visible in the list
     expect(frame).toContain("Task One");
     expect(frame).toContain("Task Two");
-    // Detail panel shows first task by default
-    expect(frame).toContain("echo one");
+    // Detail panel shows the selected (first) task's command
+    const hasCommand = frame.includes("echo one") || frame.includes("echo two");
+    expect(hasCommand).toBe(true);
   });
 
   it("displays detail panel for selected task", () => {

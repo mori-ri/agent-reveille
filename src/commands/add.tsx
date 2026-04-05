@@ -4,7 +4,7 @@ import TextInput from "ink-text-input";
 import SelectInput from "ink-select-input";
 import { createTask } from "../lib/tasks.js";
 import { installPlist } from "../lib/scheduler.js";
-import { detectInstalledAgents, buildCommand, getAvailableModels } from "../lib/agents.js";
+import { detectInstalledAgents, getAvailableModels } from "../lib/agents.js";
 import type { AgentId, ScheduleType } from "../lib/schema.js";
 import cronstrue from "cronstrue";
 
@@ -18,7 +18,6 @@ interface TaskDraft {
   workingDir: string;
   scheduleType: ScheduleType;
   scheduleCron: string;
-  command: string;
 }
 
 export function AddWizard() {
@@ -32,7 +31,6 @@ export function AddWizard() {
     workingDir: process.cwd(),
     scheduleType: "cron",
     scheduleCron: "3 9 * * *",
-    command: "",
   });
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
@@ -57,13 +55,11 @@ export function AddWizard() {
   function handleConfirm() {
     try {
       const model = draft.model || undefined;
-      const command =
-        draft.agent === "custom" ? draft.prompt : buildCommand(draft.agent, draft.prompt, undefined, model);
 
       const task = createTask({
         name: draft.name,
         agent: draft.agent,
-        command,
+        command: draft.prompt,
         workingDir: draft.workingDir,
         scheduleType: draft.scheduleType,
         scheduleCron: draft.scheduleType === "cron" ? draft.scheduleCron : undefined,
@@ -234,10 +230,8 @@ export function AddWizard() {
           <Text>  Agent:     {draft.agent}</Text>
           {draft.model && <Text>  Model:     {draft.model}</Text>}
           <Text>
-            {"  Command:   "}
-            {draft.agent === "custom"
-              ? draft.prompt
-              : buildCommand(draft.agent, draft.prompt, undefined, draft.model || undefined)}
+            {"  Prompt:    "}
+            {draft.prompt}
           </Text>
           <Text>  Directory: {draft.workingDir}</Text>
           <Text>

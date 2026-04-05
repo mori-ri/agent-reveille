@@ -1,6 +1,7 @@
 import { mkdtempSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { resetMigrationState } from "../../src/lib/db.js";
 
 export interface TestEnv {
   tmpDir: string;
@@ -20,6 +21,9 @@ export function createTestEnv(): TestEnv {
   const prevSkip = process.env.REVEILLE_SKIP_LAUNCHCTL;
   process.env.REVEILLE_HOME = tmpDir;
   process.env.REVEILLE_SKIP_LAUNCHCTL = "1";
+
+  // Reset migration cache so each test starts fresh
+  resetMigrationState();
 
   return {
     tmpDir,
