@@ -8,11 +8,13 @@ export type Step =
   | "workdir"
   | "schedule-type"
   | "schedule-value"
+  | "after-task"
   | "confirm";
 
 export interface StepContext {
   agent: AgentId;
   scheduleType: ScheduleType;
+  hasExistingTasks?: boolean;
 }
 
 const STEP_ORDER: Step[] = [
@@ -23,12 +25,14 @@ const STEP_ORDER: Step[] = [
   "workdir",
   "schedule-type",
   "schedule-value",
+  "after-task",
   "confirm",
 ];
 
 function shouldSkip(step: Step, context: StepContext): boolean {
   if (step === "model" && context.agent === "custom") return true;
   if (step === "schedule-value" && context.scheduleType === "manual") return true;
+  if (step === "after-task" && context.hasExistingTasks === false) return true;
   return false;
 }
 

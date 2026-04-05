@@ -10,7 +10,7 @@ import { getTask } from "./tasks.js";
 
 const DEFAULT_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
-export async function executeTask(taskId: string): Promise<Execution> {
+export async function executeTask(taskId: string, triggeredBy?: string): Promise<Execution> {
   const task = getTask(taskId);
   if (!task) throw new Error(`Task not found: ${taskId}`);
 
@@ -26,6 +26,7 @@ export async function executeTask(taskId: string): Promise<Execution> {
     startedAt: new Date().toISOString(),
     stdoutPath,
     stderrPath,
+    triggeredBy,
     status: "running",
   };
 

@@ -38,12 +38,22 @@ describe("getPreviousStep", () => {
     expect(getPreviousStep("schedule-value", defaultCtx)).toBe("schedule-type");
   });
 
-  it("returns 'schedule-value' from 'confirm' for non-manual schedule", () => {
-    expect(getPreviousStep("confirm", defaultCtx)).toBe("schedule-value");
+  it("returns 'schedule-value' from 'after-task' for non-manual schedule", () => {
+    expect(getPreviousStep("after-task", defaultCtx)).toBe("schedule-value");
   });
 
-  it("skips 'schedule-value' and returns 'schedule-type' from 'confirm' for manual schedule", () => {
-    expect(getPreviousStep("confirm", manualCtx)).toBe("schedule-type");
+  it("returns 'after-task' from 'confirm' when existing tasks", () => {
+    expect(getPreviousStep("confirm", defaultCtx)).toBe("after-task");
+  });
+
+  it("skips 'after-task' and returns 'schedule-value' from 'confirm' when no existing tasks", () => {
+    const ctx: StepContext = { agent: "claude", scheduleType: "cron", hasExistingTasks: false };
+    expect(getPreviousStep("confirm", ctx)).toBe("schedule-value");
+  });
+
+  it("skips 'schedule-value' and 'after-task' from 'confirm' for manual with no existing tasks", () => {
+    const ctx: StepContext = { agent: "claude", scheduleType: "manual", hasExistingTasks: false };
+    expect(getPreviousStep("confirm", ctx)).toBe("schedule-type");
   });
 });
 
@@ -76,11 +86,25 @@ describe("getNextStep", () => {
     expect(getNextStep("schedule-type", defaultCtx)).toBe("schedule-value");
   });
 
-  it("skips 'schedule-value' and returns 'confirm' from 'schedule-type' for manual schedule", () => {
-    expect(getNextStep("schedule-type", manualCtx)).toBe("confirm");
+  it("skips 'schedule-value' and returns 'after-task' from 'schedule-type' for manual schedule", () => {
+    expect(getNextStep("schedule-type", manualCtx)).toBe("after-task");
   });
 
-  it("returns 'confirm' from 'schedule-value'", () => {
-    expect(getNextStep("schedule-value", defaultCtx)).toBe("confirm");
+  it("returns 'after-task' from 'schedule-value'", () => {
+    expect(getNextStep("schedule-value", defaultCtx)).toBe("after-task");
+  });
+
+  it("returns 'confirm' from 'after-task'", () => {
+    expect(getNextStep("after-task", defaultCtx)).toBe("confirm");
+  });
+
+  it("skips 'after-task' when no existing tasks", () => {
+    const ctx: StepContext = { agent: "claude", scheduleType: "cron", hasExistingTasks: false };
+    expect(getNextStep("schedule-value", ctx)).toBe("confirm");
+  });
+
+  it("skips both 'schedule-value' and 'after-task' for manual with no existing tasks", () => {
+    const ctx: StepContext = { agent: "claude", scheduleType: "manual", hasExistingTasks: false };
+    expect(getNextStep("schedule-type", ctx)).toBe("confirm");
   });
 });

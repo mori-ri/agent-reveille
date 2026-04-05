@@ -69,6 +69,15 @@ function printHelp() {
     doctor             Diagnose common issues
     dashboard          Open interactive TUI dashboard
 
+  Options for add:
+    --name <name>      Task name (required for non-interactive)
+    --cmd <command>    Command or prompt (required for non-interactive)
+    --agent <id>       Agent: claude, codex, gemini, aider, custom
+    --cron <expr>      Cron schedule expression
+    --dir <path>       Working directory (default: cwd)
+    --model <model>    AI model name
+    --after <id>       Run this task after another task succeeds
+
   Options:
     -h, --help         Show this help
     -v, --version      Show version

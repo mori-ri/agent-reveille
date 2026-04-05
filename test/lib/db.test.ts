@@ -125,6 +125,22 @@ describe("db - task serialization", () => {
     expect(loaded?.enabled).toBe(true);
   });
 
+  it("should preserve afterTask through roundtrip", () => {
+    const task = makeTask({ afterTask: "upstream-task-id" });
+    saveTask(task);
+
+    const loaded = loadTask("test-123");
+    expect(loaded?.afterTask).toBe("upstream-task-id");
+  });
+
+  it("should not include afterTask in frontmatter when undefined", () => {
+    const task = makeTask();
+    saveTask(task);
+
+    const raw = readFileSync(getTaskFilePath("test-123"), "utf-8");
+    expect(raw).not.toContain("afterTask");
+  });
+
   it("should return null for non-existent task", () => {
     expect(loadTask("nonexistent")).toBeNull();
   });

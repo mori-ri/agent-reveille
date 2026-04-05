@@ -1,6 +1,7 @@
 import { Box, Text, render } from "ink";
 import React from "react";
 import { isLoaded } from "../lib/scheduler.js";
+import type { Task } from "../lib/schema.js";
 import { getTaskExecutions, listTasks } from "../lib/tasks.js";
 import { formatRelativeTime, formatSchedule, formatStatus } from "../utils/format.js";
 
@@ -18,6 +19,8 @@ export function TaskList() {
       </Box>
     );
   }
+
+  const taskMap = new Map<string, Task>(tasks.map((t) => [t.id, t]));
 
   return (
     <Box flexDirection="column" paddingX={1}>
@@ -64,7 +67,9 @@ export function TaskList() {
         const executions = getTaskExecutions(task.id, 1);
         const lastRun = executions[0];
 
-        const scheduleText = formatSchedule(task);
+        const afterTaskName = task.afterTask ? taskMap.get(task.afterTask)?.name : undefined;
+        const scheduleText =
+          formatSchedule(task) + (afterTaskName ? ` → after "${afterTaskName}"` : "");
 
         return (
           <Box key={task.id}>

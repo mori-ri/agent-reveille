@@ -16,6 +16,7 @@ export const TaskSchema = z.object({
   scheduleCron: z.string().optional(),
   scheduleIntervalSeconds: z.number().positive().optional(),
   model: z.string().optional(),
+  afterTask: z.string().optional(),
   enabled: z.boolean().default(true),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -31,6 +32,7 @@ export const CreateTaskInput = z.object({
   scheduleCron: z.string().optional(),
   scheduleIntervalSeconds: z.number().positive().optional(),
   model: z.string().optional(),
+  afterTask: z.string().optional(),
 });
 export type CreateTaskInput = z.infer<typeof CreateTaskInput>;
 
@@ -46,6 +48,7 @@ export const ExecutionSchema = z.object({
   stdoutPath: z.string().optional(),
   stderrPath: z.string().optional(),
   stdoutTail: z.string().optional(),
+  triggeredBy: z.string().optional(),
   status: ExecutionStatus,
 });
 export type Execution = z.infer<typeof ExecutionSchema>;
