@@ -1,3 +1,6 @@
+declare const __APP_VERSION__: string;
+const appVersion = typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "dev";
+
 const args = process.argv.slice(2);
 const command = args[0] ?? "dashboard";
 
@@ -36,7 +39,7 @@ async function main() {
       break;
     case "--version":
     case "-v":
-      console.log("reveille v0.1.0");
+      console.log(`reveille v${appVersion}`);
       break;
     default:
       console.error(`Unknown command: ${command}`);

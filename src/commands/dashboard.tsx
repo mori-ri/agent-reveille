@@ -7,7 +7,8 @@ import { readLogFile } from "../lib/executor.js";
 import { Banner } from "../components/Banner.js";
 import type { Task, Execution } from "../lib/schema.js";
 
-const VERSION = "0.1.0";
+declare const __APP_VERSION__: string;
+const VERSION = typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "dev";
 
 type ExitAction = "quit" | "add";
 let exitAction: ExitAction = "quit";
