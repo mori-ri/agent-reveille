@@ -6,10 +6,6 @@ export async function runDependentChain(taskId: string, triggerExecutionId: stri
   const dependents = getDependentTasks(taskId);
 
   for (const dep of dependents) {
-    if (!dep.enabled && dep.scheduleType !== "manual") {
-      console.log(`\n⟶ Skipped (disabled): ${dep.name} (${dep.id})`);
-      continue;
-    }
     console.log(`\n⟶ Chained: ${dep.name} (${dep.id})`);
     try {
       const execution = await executeTask(dep.id, triggerExecutionId);

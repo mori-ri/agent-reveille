@@ -30,12 +30,13 @@ reveille doctor        # Diagnose common configuration issues
 ### Non-interactive task creation
 
 ```
-reveille add --name "<name>" --agent <agent> --cmd '<command>' --cron "<cron>" --dir <path>
+reveille add --name "<name>" --agent <agent> --cmd '<command>' --cron "<cron>" --dir <path> --after <id>
 ```
 
 - `--agent`: claude, codex, gemini, aider, or custom
 - `--cron`: Standard 5-field cron expression (minute hour day month weekday)
 - `--dir`: Working directory (defaults to cwd)
+- `--after`: Run this task after another task succeeds (task chaining)
 
 ## How to Handle User Requests
 
@@ -73,6 +74,13 @@ Run `reveille doctor` to diagnose issues. Review the output and address any fail
 ### "Run it now"
 
 Run `reveille run <id>` to execute immediately.
+
+### "Run B after A" / "Chain tasks" / "タスクを連結したい"
+
+1. Create the upstream task (A) first if it doesn't exist
+2. Create the downstream task (B) with `--after <A-id>`
+3. When A succeeds, B is automatically triggered. If A fails, B does not run.
+4. Multi-level chains work: A → B → C (each declares `--after` on its predecessor)
 
 ## Cron Quick Reference
 
