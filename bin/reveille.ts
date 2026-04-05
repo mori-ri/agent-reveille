@@ -11,6 +11,9 @@ async function main() {
     case "add":
       await (await import("../src/commands/add.js")).default(args.slice(1));
       break;
+    case "edit":
+      await (await import("../src/commands/edit.js")).default(args.slice(1));
+      break;
     case "list":
     case "ls":
       await (await import("../src/commands/list.js")).default(args.slice(1));
@@ -65,6 +68,7 @@ function printHelp() {
 
   Commands:
     add                Create a new scheduled task
+    edit <id>          Edit an existing task
     list, ls           List all tasks
     remove, rm <id>    Remove a task
     run <id>           Execute a task immediately
@@ -73,6 +77,16 @@ function printHelp() {
     disable <id>       Disable task (unload launchd plist)
     doctor             Diagnose common issues
     dashboard          Open interactive TUI dashboard
+
+  Options for edit:
+    --name <name>      Task name
+    --prompt <text>    Agent prompt (sets command)
+    --cmd <command>    Raw command (overrides --prompt)
+    --model <model>    AI model name
+    --cron <expr>      Cron schedule expression
+    --interval <secs>  Interval in seconds
+    --dir <path>       Working directory
+    --after <id>       Run after another task succeeds
 
   Options for add:
     --name <name>      Task name (required for non-interactive)
