@@ -15,6 +15,7 @@ export interface StepContext {
   agent: AgentId;
   scheduleType: ScheduleType;
   hasExistingTasks?: boolean;
+  skipAgent?: boolean;
 }
 
 const STEP_ORDER: Step[] = [
@@ -30,6 +31,7 @@ const STEP_ORDER: Step[] = [
 ];
 
 function shouldSkip(step: Step, context: StepContext): boolean {
+  if (step === "agent" && context.skipAgent) return true;
   if (step === "model" && context.agent === "custom") return true;
   if (step === "schedule-value" && context.scheduleType === "manual") return true;
   if (step === "after-task" && context.hasExistingTasks === false) return true;

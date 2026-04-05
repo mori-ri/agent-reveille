@@ -24,8 +24,22 @@ reveille logs [id] # View execution history
 reveille enable <id>   # Enable scheduling (load launchd plist)
 reveille disable <id>  # Disable scheduling (unload launchd plist)
 reveille remove <id>   # Delete a task and its plist
+reveille edit <id>      # Edit an existing task
 reveille doctor        # Diagnose common configuration issues
 ```
+
+### Non-interactive task editing
+
+```
+reveille edit <id> [--name "<name>"] [--prompt '<text>'] [--cmd '<command>'] [--model <model>] [--cron "<cron>"] [--interval <secs>] [--dir <path>] [--after <id>]
+```
+
+- `--prompt`: Agent prompt (sets the command for agent tasks)
+- `--cmd`: Raw command (overrides --prompt if both provided)
+- `--model`: AI model name
+- `--cron`: Cron schedule expression
+- `--interval`: Interval in seconds
+- `--after`: Run after another task succeeds
 
 ### Non-interactive task creation
 
@@ -70,6 +84,13 @@ Run `reveille remove <id>` after confirming with the user.
 ### "Something's not working" / "Why won't my task run?"
 
 Run `reveille doctor` to diagnose issues. Review the output and address any failures.
+
+### "Edit a task" / "Change the schedule" / "タスクを編集したい"
+
+1. Get the task ID from `reveille list`
+2. Construct the non-interactive `reveille edit <id>` command with the appropriate flags
+3. Run it via Bash
+4. Confirm the task was updated
 
 ### "Run it now"
 

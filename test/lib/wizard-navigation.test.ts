@@ -4,6 +4,8 @@ import { type StepContext, getNextStep, getPreviousStep } from "../../src/lib/wi
 const defaultCtx: StepContext = { agent: "claude", scheduleType: "cron" };
 const customCtx: StepContext = { agent: "custom", scheduleType: "cron" };
 const manualCtx: StepContext = { agent: "claude", scheduleType: "manual" };
+const editCtx: StepContext = { agent: "claude", scheduleType: "cron", skipAgent: true };
+const editCustomCtx: StepContext = { agent: "custom", scheduleType: "cron", skipAgent: true };
 
 describe("getPreviousStep", () => {
   it("returns null for the first step", () => {
@@ -106,5 +108,23 @@ describe("getNextStep", () => {
   it("skips both 'schedule-value' and 'after-task' for manual with no existing tasks", () => {
     const ctx: StepContext = { agent: "claude", scheduleType: "manual", hasExistingTasks: false };
     expect(getNextStep("schedule-type", ctx)).toBe("confirm");
+  });
+
+  it("skips 'agent' and returns 'model' from 'name' when skipAgent is true", () => {
+    expect(getNextStep("name", editCtx)).toBe("model");
+  });
+
+  it("skips 'agent' and 'model' from 'name' for custom agent with skipAgent", () => {
+    expect(getNextStep("name", editCustomCtx)).toBe("prompt");
+  });
+});
+
+describe("getPreviousStep with skipAgent", () => {
+  it("skips 'agent' and returns 'name' from 'model' when skipAgent is true", () => {
+    expect(getPreviousStep("model", editCtx)).toBe("name");
+  });
+
+  it("skips 'agent' and 'model' and returns 'name' from 'prompt' for custom agent with skipAgent", () => {
+    expect(getPreviousStep("prompt", editCustomCtx)).toBe("name");
   });
 });

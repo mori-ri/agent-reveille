@@ -20,8 +20,9 @@ import {
 } from "../utils/format.js";
 import { APP_VERSION } from "../utils/version.js";
 import { AddWizard } from "./add.js";
+import { EditWizard } from "./edit.js";
 
-type View = "dashboard" | "add";
+type View = "dashboard" | "add" | "edit";
 
 function Header() {
   return (
@@ -165,6 +166,10 @@ function HelpBar() {
         </Text>{" "}
         add{"  "}
         <Text bold color="white">
+          e
+        </Text>{" "}
+        edit{"  "}
+        <Text bold color="white">
           r
         </Text>{" "}
         remove{"  "}
@@ -188,6 +193,7 @@ function HelpBar() {
 export function Dashboard() {
   const { exit } = useApp();
   const [view, setView] = useState<View>("dashboard");
+  const [editTargetId, setEditTargetId] = useState("");
   const [tasks, setTasks] = useState<Task[]>(listTasks());
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [message, setMessage] = useState("");
@@ -247,6 +253,11 @@ export function Dashboard() {
         setView("add");
       }
 
+      if (input === "e" && selectedTask) {
+        setEditTargetId(selectedTask.id);
+        setView("edit");
+      }
+
       if (input === "r" && selectedTask) {
         setConfirmDelete(true);
         setMessage(`Remove "${selectedTask.name}"? (y/n)`);
@@ -294,6 +305,22 @@ export function Dashboard() {
         onCancel={() => setView("dashboard")}
       />
     );
+  }
+
+  if (view === "edit" && editTargetId) {
+    const editTask = getTask(editTargetId);
+    if (editTask) {
+      return (
+        <EditWizard
+          task={editTask}
+          onComplete={() => {
+            refreshTasks();
+            setView("dashboard");
+          }}
+          onCancel={() => setView("dashboard")}
+        />
+      );
+    }
   }
 
   return (
