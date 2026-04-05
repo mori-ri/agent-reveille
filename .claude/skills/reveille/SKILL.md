@@ -24,6 +24,7 @@ reveille logs [id] # View execution history
 reveille enable <id>   # Enable scheduling (load launchd plist)
 reveille disable <id>  # Disable scheduling (unload launchd plist)
 reveille remove <id>   # Delete a task and its plist
+reveille doctor        # Diagnose common configuration issues
 ```
 
 ### Non-interactive task creation
@@ -64,6 +65,10 @@ Run `reveille disable <id>` to unload the launchd plist without deleting the tas
 ### "Remove a task"
 
 Run `reveille remove <id>` after confirming with the user.
+
+### "Something's not working" / "Why won't my task run?"
+
+Run `reveille doctor` to diagnose issues. Review the output and address any failures.
 
 ### "Run it now"
 
