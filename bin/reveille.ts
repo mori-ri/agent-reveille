@@ -1,9 +1,12 @@
+import { initUpdateNotifier, showUpdateNotification } from "../src/utils/update-notify.js";
 import { APP_VERSION } from "../src/utils/version.js";
 
 const args = process.argv.slice(2);
 const command = args[0] ?? "dashboard";
 
 async function main() {
+  const notifier = command !== "run" ? initUpdateNotifier() : undefined;
+
   switch (command) {
     case "add":
       await (await import("../src/commands/add.js")).default(args.slice(1));
@@ -48,6 +51,8 @@ async function main() {
       printHelp();
       process.exit(1);
   }
+
+  showUpdateNotification(notifier);
 }
 
 function printHelp() {

@@ -22,6 +22,7 @@ export function runCLI(args: string[], tmpDir: string): Promise<CLIResult> {
           ...process.env,
           REVEILLE_HOME: tmpDir,
           REVEILLE_SKIP_LAUNCHCTL: "1",
+          REVEILLE_SKIP_UPDATE_CHECK: "1",
           NO_COLOR: "1",
           FORCE_COLOR: "0",
         },
