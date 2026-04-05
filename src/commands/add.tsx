@@ -7,16 +7,12 @@ import { detectInstalledAgents, getAvailableModels } from "../lib/agents.js";
 import { installPlist } from "../lib/scheduler.js";
 import type { AgentId, ScheduleType } from "../lib/schema.js";
 import { createTask } from "../lib/tasks.js";
-
-type Step =
-  | "name"
-  | "agent"
-  | "model"
-  | "prompt"
-  | "workdir"
-  | "schedule-type"
-  | "schedule-value"
-  | "confirm";
+import {
+  type Step,
+  type StepContext,
+  getNextStep,
+  getPreviousStep,
+} from "../lib/wizard-navigation.js";
 
 interface TaskDraft {
   name: string;
@@ -28,7 +24,12 @@ interface TaskDraft {
   scheduleCron: string;
 }
 
-export function AddWizard() {
+export interface AddWizardProps {
+  onComplete?: () => void;
+  onCancel?: () => void;
+}
+
+export function AddWizard({ onComplete, onCancel }: AddWizardProps = {}) {
   const { exit } = useApp();
   const [step, setStep] = useState<Step>("name");
   const [draft, setDraft] = useState<TaskDraft>({
@@ -43,6 +44,24 @@ export function AddWizard() {
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
   const [taskId, setTaskId] = useState("");
+
+  const stepContext: StepContext = {
+    agent: draft.agent,
+    scheduleType: draft.scheduleType,
+  };
+
+  useInput((_input, key) => {
+    if (key.escape && !done) {
+      const prev = getPreviousStep(step, stepContext);
+      if (prev) {
+        setStep(prev);
+      } else if (onCancel) {
+        onCancel();
+      } else {
+        exit();
+      }
+    }
+  });
 
   const agents = detectInstalledAgents();
 
@@ -82,7 +101,11 @@ export function AddWizard() {
 
       setTaskId(task.id);
       setDone(true);
-      setTimeout(() => exit(), 100);
+      if (onComplete) {
+        setTimeout(() => onComplete(), 100);
+      } else {
+        setTimeout(() => exit(), 100);
+      }
     } catch (err) {
       setError((err as Error).message);
     }
@@ -117,7 +140,7 @@ export function AddWizard() {
             value={draft.name}
             onChange={(v) => setDraft({ ...draft, name: v })}
             onSubmit={(v) => {
-              if (v.trim()) setStep("agent");
+              if (v.trim()) setStep(getNextStep("name", stepContext));
             }}
           />
         </Box>
@@ -129,12 +152,14 @@ export function AddWizard() {
           <SelectInput
             items={agentItems}
             onSelect={(item) => {
-              setDraft({ ...draft, agent: item.value });
-              if (item.value === "custom") {
-                setStep("prompt");
-              } else {
-                setStep("model");
-              }
+              const newDraft = { ...draft, agent: item.value };
+              setDraft(newDraft);
+              setStep(
+                getNextStep("agent", {
+                  agent: item.value,
+                  scheduleType: newDraft.scheduleType,
+                }),
+              );
             }}
           />
         </Box>
@@ -150,7 +175,7 @@ export function AddWizard() {
             value={draft.model}
             onChange={(v) => setDraft({ ...draft, model: v })}
             onSubmit={() => {
-              setStep("prompt");
+              setStep(getNextStep("model", stepContext));
             }}
           />
         </Box>
@@ -163,7 +188,7 @@ export function AddWizard() {
             value={draft.prompt}
             onChange={(v) => setDraft({ ...draft, prompt: v })}
             onSubmit={(v) => {
-              if (v.trim()) setStep("workdir");
+              if (v.trim()) setStep(getNextStep("prompt", stepContext));
             }}
           />
         </Box>
@@ -176,7 +201,7 @@ export function AddWizard() {
             value={draft.workingDir}
             onChange={(v) => setDraft({ ...draft, workingDir: v })}
             onSubmit={(v) => {
-              if (v.trim()) setStep("schedule-type");
+              if (v.trim()) setStep(getNextStep("workdir", stepContext));
             }}
           />
         </Box>
@@ -188,12 +213,14 @@ export function AddWizard() {
           <SelectInput
             items={scheduleItems}
             onSelect={(item) => {
-              setDraft({ ...draft, scheduleType: item.value });
-              if (item.value === "manual") {
-                setStep("confirm");
-              } else {
-                setStep("schedule-value");
-              }
+              const newDraft = { ...draft, scheduleType: item.value };
+              setDraft(newDraft);
+              setStep(
+                getNextStep("schedule-type", {
+                  agent: newDraft.agent,
+                  scheduleType: item.value,
+                }),
+              );
             }}
           />
         </Box>
@@ -210,7 +237,7 @@ export function AddWizard() {
             value={draft.scheduleCron}
             onChange={(v) => setDraft({ ...draft, scheduleCron: v })}
             onSubmit={(v) => {
-              if (v.trim()) setStep("confirm");
+              if (v.trim()) setStep(getNextStep("schedule-value", stepContext));
             }}
           />
           {draft.scheduleType === "cron" && draft.scheduleCron && (
@@ -247,7 +274,7 @@ export function AddWizard() {
                 : `Every ${draft.scheduleCron} minutes`}
           </Text>
           <Text> </Text>
-          <Text color="cyan">Press Enter to create, or Ctrl+C to cancel.</Text>
+          <Text color="cyan">Press Enter to create, or Esc to go back.</Text>
           <ConfirmInput onConfirm={handleConfirm} />
         </Box>
       )}
