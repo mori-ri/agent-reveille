@@ -46,6 +46,7 @@
     "cron-parser": "^5.0.0",
     "cronstrue": "^2.52.0",
     "date-fns": "^4.1.0",
+    "gray-matter": "^4.0.3",
     "ink": "^5.1.0",
     "ink-select-input": "^6.0.0",
     "ink-spinner": "^5.0.0",

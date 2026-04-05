@@ -1,7 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createTask, getTask, listTasks, updateTask, deleteTask } from "../../src/lib/tasks.js";
-import { getTasksFilePath, getExecutionsFilePath } from "../../src/lib/paths.js";
-import { writeFileSync } from "node:fs";
 import { createTestEnv, type TestEnv } from "../helpers/setup.js";
 
 describe("tasks", () => {
@@ -9,11 +7,6 @@ describe("tasks", () => {
 
   beforeEach(() => {
     env = createTestEnv();
-
-    const tasksPath = getTasksFilePath();
-    const execsPath = getExecutionsFilePath();
-    writeFileSync(tasksPath, "[]", "utf-8");
-    writeFileSync(execsPath, "[]", "utf-8");
   });
 
   afterEach(() => {
@@ -24,7 +17,7 @@ describe("tasks", () => {
     const task = createTask({
       name: "Test",
       agent: "claude",
-      command: 'claude -p "test"',
+      command: "test prompt",
       workingDir: "/tmp",
       scheduleType: "manual",
     });
@@ -79,7 +72,7 @@ describe("tasks", () => {
     const task = createTask({
       name: "Model Test",
       agent: "claude",
-      command: 'claude -p "test" --model opus',
+      command: "test prompt",
       workingDir: "/tmp",
       scheduleType: "manual",
       model: "opus",
@@ -94,7 +87,7 @@ describe("tasks", () => {
     const task = createTask({
       name: "No Model",
       agent: "claude",
-      command: 'claude -p "test"',
+      command: "test prompt",
       workingDir: "/tmp",
       scheduleType: "manual",
     });
