@@ -14,6 +14,12 @@ import {
   getPreviousStep,
 } from "../lib/wizard-navigation.js";
 
+export function isValidInterval(value: string): boolean {
+  if (!value.trim()) return false;
+  const n = Number(value);
+  return Number.isInteger(n) && n > 0;
+}
+
 interface TaskDraft {
   name: string;
   agent: AgentId;
@@ -83,6 +89,12 @@ export function AddWizard({ onComplete, onCancel }: AddWizardProps = {}) {
     { label: "Manual only (run manually)", value: "manual" as ScheduleType },
   ];
 
+  function formatScheduleSummary(): string {
+    if (draft.scheduleType === "manual") return "Manual";
+    if (draft.scheduleType === "interval") return `Every ${draft.scheduleCron} minutes`;
+    return cronstrue.toString(draft.scheduleCron);
+  }
+
   function handleConfirm() {
     try {
       const model = draft.model || undefined;
@@ -96,7 +108,9 @@ export function AddWizard({ onComplete, onCancel }: AddWizardProps = {}) {
         scheduleType: draft.scheduleType,
         scheduleCron: draft.scheduleType === "cron" ? draft.scheduleCron : undefined,
         scheduleIntervalSeconds:
-          draft.scheduleType === "interval" ? Number.parseInt(draft.scheduleCron) * 60 : undefined,
+          draft.scheduleType === "interval" && isValidInterval(draft.scheduleCron)
+            ? Number.parseInt(draft.scheduleCron, 10) * 60
+            : undefined,
         model,
         afterTask,
       });
@@ -219,7 +233,12 @@ export function AddWizard({ onComplete, onCancel }: AddWizardProps = {}) {
           <SelectInput
             items={scheduleItems}
             onSelect={(item) => {
-              const newDraft = { ...draft, scheduleType: item.value };
+              const defaultScheduleValue = item.value === "interval" ? "" : "3 9 * * *";
+              const newDraft = {
+                ...draft,
+                scheduleType: item.value,
+                scheduleCron: defaultScheduleValue,
+              };
               setDraft(newDraft);
               setStep(
                 getNextStep("schedule-type", {
@@ -241,9 +260,12 @@ export function AddWizard({ onComplete, onCancel }: AddWizardProps = {}) {
           </Text>
           <TextInput
             value={draft.scheduleCron}
+            placeholder={draft.scheduleType === "interval" ? "30" : undefined}
             onChange={(v) => setDraft({ ...draft, scheduleCron: v })}
             onSubmit={(v) => {
-              if (v.trim()) setStep(getNextStep("schedule-value", stepContext));
+              const isValid =
+                draft.scheduleType === "interval" ? isValidInterval(v) : v.trim() !== "";
+              if (isValid) setStep(getNextStep("schedule-value", stepContext));
             }}
           />
           {draft.scheduleType === "cron" && draft.scheduleCron && (
@@ -255,6 +277,13 @@ export function AddWizard({ onComplete, onCancel }: AddWizardProps = {}) {
                   return "(invalid cron)";
                 }
               })()}
+            </Text>
+          )}
+          {draft.scheduleType === "interval" && draft.scheduleCron && (
+            <Text color="gray">
+              {isValidInterval(draft.scheduleCron)
+                ? `Every ${draft.scheduleCron} minutes`
+                : "(enter a positive integer)"}
             </Text>
           )}
         </Box>
@@ -292,11 +321,7 @@ export function AddWizard({ onComplete, onCancel }: AddWizardProps = {}) {
           <Text> Directory: {draft.workingDir}</Text>
           <Text>
             {"  Schedule:  "}
-            {draft.scheduleType === "manual"
-              ? "Manual"
-              : draft.scheduleType === "cron"
-                ? cronstrue.toString(draft.scheduleCron)
-                : `Every ${draft.scheduleCron} minutes`}
+            {formatScheduleSummary()}
           </Text>
           {draft.afterTask && (
             <Text>
